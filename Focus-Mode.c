@@ -82,16 +82,22 @@ char* handleRound(const int duration) {
         scanf(" %c", &simulator_choice);
         switch (simulator_choice) {
             case EMAIL_NOTIFICATION:
+                if (isReceivedEmail) break;
+                isReceivedEmail = true;
                 allDistractions = realloc(allDistractions, (length + emailLength+ 1) * sizeof(char)); // +1 for null terminator
                 strcpy(allDistractions + length, EMAIL_DISTRACTION);
                 length += emailLength;
                 break; //EMAIL
             case DELIVERY_REMINDER:
+                if (isReceivedDelivery) break;
+                isReceivedDelivery = true;
                 allDistractions = realloc(allDistractions, (length + deliveryLength + 1) * sizeof(char));
                 strcpy(allDistractions + length, DELIVERY_DISTRACTION);
                 length += deliveryLength;
                 break; //Reminder to pick up delivery
             case DOORBELL_RINGING:
+                if (isReceivedDoorbell) break;
+                isReceivedDoorbell = true;
                 allDistractions = realloc(allDistractions, (length + doorbellLength + 1) * sizeof(char));
                 strcpy(allDistractions + length, DOORBELL_DISTRACTION);
                 length += doorbellLength;
