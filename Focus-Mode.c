@@ -45,9 +45,9 @@ void runFocusMode(const int numOfRounds, const int duration) {
 }
 char* handleRound(const int duration) {
     int length = 0;
-    int emailLength = strlen(EMAIL_DISTRACTION);
-    int deliveryLength = strlen(DELIVERY_DISTRACTION);
-    int doorbellLength = strlen(DOORBELL_DISTRACTION);
+    const int emailLength = strlen(EMAIL_DISTRACTION);
+    const int deliveryLength = strlen(DELIVERY_DISTRACTION);
+    const int doorbellLength = strlen(DOORBELL_DISTRACTION);
     char* allDistractions = malloc(1);
     allDistractions[0] = '\0';
 
