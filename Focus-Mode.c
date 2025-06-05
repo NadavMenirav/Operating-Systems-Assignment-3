@@ -16,12 +16,15 @@
 #define DOORBELL_RINGING '3'
 
 void runFocusMode(const int numOfRounds, const int duration);
-
+void handleRound(const int duration);
 
 void runFocusMode(const int numOfRounds, const int duration) {
-    char simulator_choice = 0; //choice of user
     printf(ENTER_FOCUS_MODE_MESSAGE);
+    handleRound(duration);
 
+}
+void handleRound(const int duration) {
+    char simulator_choice = 0; //choice of user
     for (int i = 0; i < duration; i++) { //rounds
         printf(SIMULATE_DISTRACTION); //the options for the user
         scanf(" %c", &simulator_choice);
