@@ -6,7 +6,7 @@
 
 #define FOCUS_MODE_ARG_COUNT 3
 #define FOCUS_MODE "Focus-Mode"
-#define FOCUS_MODE "CPU-Scheduler"
+#define CPU_Scheduler "CPU-Scheduler"
 #define WRONG_ARG_COUNT_MESSAGE "Usage: %s <Focus-Mode/CPU-Schedule> <Num-Of-Rounds/Processes.csv> <Round-Duration/Time-Quantum>"
 #define WRONG_ARG_COUNT_EXIT_STATUS 1
 
@@ -24,6 +24,7 @@ int main(const int argc, const char** argv) {
         }
         const int numOfRounds = atoi(argv[2]);
         const int duration = atoi(argv[3]);
-        runFocusMode(numOfRounds, duration);
+        runFocusMode(numOfRounds, duration); //starting focus mode
     }
+    return 0;
 }
