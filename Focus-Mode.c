@@ -10,6 +10,11 @@
 "        Checking pending distractions...\n"\
 "──────────────────────────────────────────────\n"\
 
+#define RETURN_TO_FOCUS "──────────────────────────────────────────────\n"\
+"             Back to Focus Mode.\n"\
+"══════════════════════════════════════════════\n"
+
+
 
 #define SIMULATE_DISTRACTION "\nSimulate a distraction:\n"\
 "  1 = Email notification\n"\
@@ -26,6 +31,14 @@
 "[Outcome:] You picked it up just in time.\n"
 #define DOORBELL_DISTRACTION " - The doorbell is ringing.\n"\
 "[Outcome:] Food delivery is here.\n"
+#define NO_DISTRACTIONS "No distractions reached you this round.\n"
+#define FOCUS_MODE_COMPLETED "Focus Mode complete. All distractions are now unblocked.\n"
+
+typedef enum {
+    false,
+    true
+}boolean;
+
 
 void runFocusMode(const int numOfRounds, const int duration);
 char* handleRound(const int duration);
@@ -33,14 +46,23 @@ char* handleRound(const int duration);
 void runFocusMode(const int numOfRounds, const int duration) {
     const char* distractions = NULL;
 
-    printf(ENTER_FOCUS_MODE_MESSAGE);
+    printf(ENTER_FOCUS_MODE_MESSAGE); //starting message
+
     for (int i = 1; i <= numOfRounds; i++) {
         printf(FOCUS_ROUND, i);
         distractions = handleRound(duration);
-        printf(CHECK_DISTRACTIONS);
-        printf(distractions);
 
+        printf(CHECK_DISTRACTIONS);
+
+        if (strlen(distractions) > 0) // are there distractions
+            printf(distractions);
+        else // user quit on the first time
+            printf(NO_DISTRACTIONS);
+
+        printf(RETURN_TO_FOCUS);
     }
+
+    printf(FOCUS_MODE_COMPLETED);
 
 }
 char* handleRound(const int duration) {
@@ -48,6 +70,9 @@ char* handleRound(const int duration) {
     const int emailLength = strlen(EMAIL_DISTRACTION);
     const int deliveryLength = strlen(DELIVERY_DISTRACTION);
     const int doorbellLength = strlen(DOORBELL_DISTRACTION);
+    boolean isReceivedEmail = false;
+    boolean isReceivedDelivery = false;
+    boolean isReceivedDoorbell = false;
     char* allDistractions = malloc(1);
     allDistractions[0] = '\0';
 
