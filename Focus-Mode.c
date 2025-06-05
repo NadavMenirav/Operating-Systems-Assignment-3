@@ -1,7 +1,7 @@
 #include <stdio.h>
-#define ENTER_FOCUS_MODE_MESSAGE "Entering Focus Mode. All distractions are blocked.\n"\
-"══════════════════════════════════════════════\n"\
-"               Focus Round 1                \n"\
+#define ENTER_FOCUS_MODE_MESSAGE "Entering Focus Mode. All distractions are blocked.\n"
+#define FOCUS_ROUND "══════════════════════════════════════════════\n"\
+"               Focus Round %d                \n"\
 "──────────────────────────────────────────────\n"
 
 
@@ -20,7 +20,10 @@ void handleRound(const int duration);
 
 void runFocusMode(const int numOfRounds, const int duration) {
     printf(ENTER_FOCUS_MODE_MESSAGE);
-    handleRound(duration);
+    for (int i = 1; i <= numOfRounds; i++) {
+        printf(FOCUS_ROUND, i);
+        handleRound(duration);
+    }
 
 }
 void handleRound(const int duration) {
