@@ -45,6 +45,8 @@ void runFocusMode(const int numOfRounds, const int duration);
 char* handleRound(const int duration);
 void sigConsumer();
 void sendSig(const char userChoice);
+void FindSig(int* receivedSignals, int receivedSignalsCount, int* osig);
+void blockSignals();
 
 void runFocusMode(const int numOfRounds, const int duration) {
     const char* distractions = NULL;
@@ -69,20 +71,12 @@ void runFocusMode(const int numOfRounds, const int duration) {
 
 }
 char* handleRound(const int duration) {
-    int length = 0;
-    const int emailLength = strlen(EMAIL_DISTRACTION);
-    const int deliveryLength = strlen(DELIVERY_DISTRACTION);
-    const int doorbellLength = strlen(DOORBELL_DISTRACTION);
-    boolean isReceivedEmail = false;
-    boolean isReceivedDelivery = false;
-    boolean isReceivedDoorbell = false;
-    char* allDistractions = malloc(1);
-    allDistractions[0] = '\0';
-
+    int* receivedSignals;
     char simulator_choice = 0; //choice of user
     for (int i = 0; i < duration; i++) { //rounds
         printf(SIMULATE_DISTRACTION); //the options for the user
         scanf(" %c", &simulator_choice);
+        sendSig(simulator_choice);
         switch (simulator_choice) {
             case EMAIL_NOTIFICATION:
                 if (isReceivedEmail) break;
@@ -111,6 +105,19 @@ char* handleRound(const int duration) {
     return allDistractions;
 }
 
+void blockSignals() {
+    sigset_t sigs;
+    sigemptyset(&sigs);
+    sigaddset(&sigs, SIGUSR1);
+    sigaddset(&sigs, SIGUSR2);
+    sigaddset(&sigs, SIGCHLD);
+
+    if (sigprocmask(SIG_BLOCK, &sigs, NULL) == -1) {
+        perror("sigprocmask failed");
+        exit(EXIT_FAILURE);
+
+}
+
 
 void sendSig(const char userChoice) {
     // sends the signal
@@ -129,6 +136,7 @@ void sendSig(const char userChoice) {
             perror("Unknown signal");
             break;
     }
+    raise(signal);
 }
 
 void sigConsumer() {
