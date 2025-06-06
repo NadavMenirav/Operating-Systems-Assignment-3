@@ -44,6 +44,7 @@ typedef enum {
 void runFocusMode(const int numOfRounds, const int duration);
 char* handleRound(const int duration);
 void sigConsumer();
+void sendSig(const char userChoice);
 
 void runFocusMode(const int numOfRounds, const int duration) {
     const char* distractions = NULL;
@@ -110,7 +111,28 @@ char* handleRound(const int duration) {
     return allDistractions;
 }
 
+
+void sendSig(const char userChoice) {
+    // sends the signal
+    int signal = 0;
+    switch (userChoice) {
+        case EMAIL_NOTIFICATION:
+            signal = SIGUSR1;
+            break;
+        case DELIVERY_REMINDER:
+            signal = SIGUSR2;
+            break;
+        case DOORBELL_RINGING:
+            signal = SIGCHLD;
+            break;
+        default:
+            perror("Unknown signal");
+            break;
+    }
+}
+
 void sigConsumer() {
+
     sigset_t signalsToUnblock;
     sigemptyset(&signalsToUnblock);
     sigaddset(&signalsToUnblock, SIGUSR1);
