@@ -47,6 +47,7 @@ void sigConsumer();
 void sendSig(const char userChoice);
 void FindSig(int* receivedSignals, int receivedSignalsCount, int* osig);
 void blockSignals();
+void unblockSignals();
 
 void runFocusMode(const int numOfRounds, const int duration) {
     const char* distractions = NULL;
@@ -71,12 +72,15 @@ void runFocusMode(const int numOfRounds, const int duration) {
 
 }
 char* handleRound(const int duration) {
-    int* receivedSignals;
+    int receivedSignals[3] = {0, 0, 0};
     char simulator_choice = 0; //choice of user
+    sigset_t pending; // the signals waiting
+
     for (int i = 0; i < duration; i++) { //rounds
         printf(SIMULATE_DISTRACTION); //the options for the user
         scanf(" %c", &simulator_choice);
         sendSig(simulator_choice);
+
         switch (simulator_choice) {
             case EMAIL_NOTIFICATION:
                 if (isReceivedEmail) break;
@@ -115,7 +119,20 @@ void blockSignals() {
     if (sigprocmask(SIG_BLOCK, &sigs, NULL) == -1) {
         perror("sigprocmask failed");
         exit(EXIT_FAILURE);
+    }
+}
 
+void unblockSignals() {
+    sigset_t sigs;
+    sigemptyset(&sigs);
+    sigaddset(&sigs, SIGUSR1);
+    sigaddset(&sigs, SIGUSR2);
+    sigaddset(&sigs, SIGCHLD);
+
+    if (sigprocmask(SIG_UNBLOCK, &sigs, NULL) == -1) {
+        perror("sigprocmask failed");
+        exit(EXIT_FAILURE);
+    }
 }
 
 
