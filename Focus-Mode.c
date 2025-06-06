@@ -48,6 +48,7 @@ void sendSig(const char userChoice);
 void FindSig(int* receivedSignals, int receivedSignalsCount, int* osig);
 void blockSignals();
 void unblockSignals();
+void handleSignals();
 
 void runFocusMode(const int numOfRounds, const int duration) {
     const char* distractions = NULL;
@@ -133,6 +134,17 @@ void unblockSignals() {
         perror("sigprocmask failed");
         exit(EXIT_FAILURE);
     }
+}
+
+void handleSignals() {
+    // we want the signals to not do anything when being unblocked
+    struct sigaction sigAction = {0};
+    sigAction.sa_handler = SIG_IGN;
+
+    // ignoring these
+    sigaction(SIGUSR1, &sigAction, NULL);
+    sigaction(SIGUSR2, &sigAction, NULL);
+    sigaction(SIGCHLD, &sigAction, NULL);
 }
 
 
