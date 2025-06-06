@@ -190,16 +190,3 @@ int findInPending(const int* receivedSignals, const int receivedSignalsCount, si
     return -1; // not found
 }
 
-void sigConsumer() {
-
-    sigset_t signalsToUnblock;
-    sigemptyset(&signalsToUnblock);
-    sigaddset(&signalsToUnblock, SIGUSR1);
-    sigaddset(&signalsToUnblock, SIGUSR2);
-    sigaddset(&signalsToUnblock, SIGCHLD);
-
-    if (sigprocmask(SIG_UNBLOCK, &signalsToUnblock, NULL) == -1) {
-        perror("unblocking signals failed");
-        exit(EXIT_FAILURE);
-    }
-}
