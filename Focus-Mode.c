@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #define ENTER_FOCUS_MODE_MESSAGE "Entering Focus Mode. All distractions are blocked.\n"
 #define FOCUS_ROUND "══════════════════════════════════════════════\n"\
@@ -42,6 +43,7 @@ typedef enum {
 
 void runFocusMode(const int numOfRounds, const int duration);
 char* handleRound(const int duration);
+void sigConsumer();
 
 void runFocusMode(const int numOfRounds, const int duration) {
     const char* distractions = NULL;
@@ -106,6 +108,17 @@ char* handleRound(const int duration) {
         }
     }
     return allDistractions;
+}
 
+void sigConsumer() {
+    sigset_t signalsToUnblock;
+    sigemptyset(&signalsToUnblock);
+    sigaddset(&signalsToUnblock, SIGUSR1);
+    sigaddset(&signalsToUnblock, SIGUSR2);
+    sigaddset(&signalsToUnblock, SIGCHLD);
 
+    if (sigprocmask(SIG_UNBLOCK, &signalsToUnblock, NULL) == -1) {
+        perror("unblocking signals failed");
+        exit(EXIT_FAILURE);
+    }
 }
