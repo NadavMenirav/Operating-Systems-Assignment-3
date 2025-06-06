@@ -22,7 +22,8 @@
 "  1 = Email notification\n"\
 "  2 = Reminder to pick up delivery\n"\
 "  3 = Doorbell Ringing\n"\
-"  q = Quit\n"
+"  q = Quit\n"\
+">> "
 
 #define EMAIL_NOTIFICATION '1'
 #define DELIVERY_REMINDER '2'
@@ -200,6 +201,10 @@ int findInPending(const int* receivedSignals, const int receivedSignalsCount, co
 
 void printMessages(const int* receivedSignals, const int receivedSignalsCount) {
     printf(CHECK_DISTRACTIONS);
+
+    if (receivedSignalsCount == 0) {
+        printf(NO_DISTRACTIONS);
+    }
 
     int currentSignal = 0;
     for (int i = 0; i < receivedSignalsCount; i++) {
