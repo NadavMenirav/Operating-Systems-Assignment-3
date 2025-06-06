@@ -5,7 +5,7 @@
 
 #define ENTER_FOCUS_MODE_MESSAGE "Entering Focus Mode. All distractions are blocked.\n"
 #define FOCUS_ROUND "══════════════════════════════════════════════\n"\
-"               Focus Round %d                \n"\
+"                Focus Round %d                \n"\
 "──────────────────────────────────────────────\n"
 
 #define CHECK_DISTRACTIONS "──────────────────────────────────────────────\n"\
@@ -28,14 +28,14 @@
 #define EMAIL_NOTIFICATION '1'
 #define DELIVERY_REMINDER '2'
 #define DOORBELL_RINGING '3'
-#define EMAIL_DISTRACTION "- Email notification is waiting.\n"\
+#define EMAIL_DISTRACTION " - Email notification is waiting.\n"\
 "[Outcome:] The TA announced: Everyone get 100 on the exercise!\n"
 #define DELIVERY_DISTRACTION " - You have a reminder to pick up your delivery.\n"\
 "[Outcome:] You picked it up just in time.\n"
 #define DOORBELL_DISTRACTION " - The doorbell is ringing.\n"\
 "[Outcome:] Food delivery is here.\n"
 #define NO_DISTRACTIONS "No distractions reached you this round.\n"
-#define FOCUS_MODE_COMPLETED "Focus Mode complete. All distractions are now unblocked.\n"
+#define FOCUS_MODE_COMPLETED "\nFocus Mode complete. All distractions are now unblocked.\n"
 #define QUIT_CHOICE 'q'
 
 typedef enum {
