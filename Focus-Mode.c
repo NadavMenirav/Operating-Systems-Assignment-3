@@ -45,10 +45,11 @@ void runFocusMode(const int numOfRounds, const int duration);
 char* handleRound(const int duration);
 void sigConsumer();
 void sendSig(const char userChoice);
-void FindSig(int* receivedSignals, int receivedSignalsCount, int* osig);
 void blockSignals();
 void unblockSignals();
 void handleSignals();
+int findInPending(int* receivedSignals, int receivedSignalsCount, sigset_t* pending);
+void printMessages(int* receivedSignals, int receivedSignalsCount);
 
 void runFocusMode(const int numOfRounds, const int duration) {
     const char* distractions = NULL;
@@ -73,18 +74,28 @@ void runFocusMode(const int numOfRounds, const int duration) {
 
 }
 char* handleRound(const int duration) {
+    int receivedSignalsCount = 0;
+    int newSignal = 0;
     int receivedSignals[3] = {0, 0, 0};
     char simulator_choice = 0; //choice of user
     sigset_t pending; // the signals waiting
-
+    blockSignals();
     for (int i = 0; i < duration; i++) { //rounds
         printf(SIMULATE_DISTRACTION); //the options for the user
         scanf(" %c", &simulator_choice);
-        blockSignals();
         sendSig(simulator_choice);
 
-        unblockSignals();
+        sigpending(&pending); // receiving the pending signals
+        newSignal = findInPending(receivedSignals, receivedSignalsCount , &pending);
+        receivedSignals[receivedSignalsCount] = newSignal;
+        receivedSignalsCount++;
+
+
     }
+    unblockSignals();
+    printMessages(receivedSignals, receivedSignalsCount);
+
+
 }
 
 void blockSignals() {
@@ -117,6 +128,7 @@ void handleSignals() {
     // we want the signals to not do anything when being unblocked
     struct sigaction sigAction = {0};
     sigAction.sa_handler = SIG_IGN;
+    sigemptyset(&sigAction.sa_mask);
 
     // ignoring these
     sigaction(SIGUSR1, &sigAction, NULL);
@@ -143,6 +155,39 @@ void sendSig(const char userChoice) {
             break;
     }
     raise(signal);
+}
+
+int findInPending(const int* receivedSignals, const int receivedSignalsCount, sigset_t* pending) {
+    /*
+     *the function checks what is the new signal that has been added to the
+     *pending list and adds it to  receivedSignals
+     */
+
+    boolean isEmailReceived = false;
+    boolean isReminderReceived = false;
+    boolean isDoorbellReceived = false;
+
+    int currentSignal = 0;
+
+
+    for (int i = 0; i < receivedSignalsCount; i++) {
+        currentSignal = receivedSignals[i];
+        // checking if the current signal is one of the ones we want, or it has already been read
+        isEmailReceived = (currentSignal == SIGUSR1 || isEmailReceived);
+        isReminderReceived = (currentSignal == SIGUSR2 || isReminderReceived);
+        isDoorbellReceived = (currentSignal == SIGCHLD || isDoorbellReceived);
+    }
+
+    if (!isEmailReceived && sigismember(pending, SIGUSR1)) {
+        return SIGUSR1;
+    }
+    if (!isReminderReceived && sigismember(pending, SIGUSR2)) {
+        return SIGUSR2;
+    }
+    if (!isDoorbellReceived && sigismember(pending, SIGCHLD)) {
+        return SIGCHLD;
+    }
+    return -1; // not found
 }
 
 void sigConsumer() {
