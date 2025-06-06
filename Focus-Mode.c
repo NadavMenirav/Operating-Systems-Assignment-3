@@ -54,6 +54,7 @@ void handleSignals();
 int findInPending(const int* receivedSignals, const int receivedSignalsCount, const sigset_t* pending);
 void printMessages(const int* receivedSignals, int receivedSignalsCount);
 void dummy();
+void restoreDefaultSignals();
 
 void runFocusMode(const int numOfRounds, const int duration) {
 
@@ -97,6 +98,7 @@ void handleRound(const int duration) {
     }
     unblockSignals();
     printMessages(receivedSignals, receivedSignalsCount);
+    restoreDefaultSignals();
 
 
 }
@@ -153,7 +155,7 @@ void sendSig(const char userChoice) {
         case DOORBELL_RINGING:
             signal = SIGINT;
             break;
-        default: // unkown signal
+        default: // unknown signal
             fprintf(stderr, "Unknown signal %c", userChoice);
             break;
     }
@@ -228,4 +230,15 @@ void printMessages(const int* receivedSignals, const int receivedSignalsCount) {
 
 void dummy() {
     // nothing
+}
+
+void restoreDefaultSignals() {
+    struct sigaction sa;
+    sa.sa_handler = SIG_DFL;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+
+    sigaction(SIGUSR1, &sa, NULL);
+    sigaction(SIGUSR2, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
 }
