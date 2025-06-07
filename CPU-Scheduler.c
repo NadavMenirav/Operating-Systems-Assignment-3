@@ -18,6 +18,14 @@
 ">> Engine Status  : Initialized\n"\
 "──────────────────────────────────────────────\n\n"
 
+#define SCHEDULER_OUTRO "\n──────────────────────────────────────────────\n"\
+">> Engine Status  : Completed\n"\
+">> Summary        :\n"\
+"   └─ Average Waiting Time : %d time units\n"\
+">> End of Report\n"\
+"══════════════════════════════════════════════\n\n"
+
+
 #define FCFS "FCFS"
 
 
@@ -73,6 +81,9 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     int procsCount = 0;
     int startingIDX = 0;
     int turnaroundTime = 0;
+    int totalWaitingTime = 0;
+    int waitingTime = 0;
+    int averageWaitingTime = 0;
     bool isProcessRunning = false;
     bool isIdle = false;
     struct timespec start;
@@ -110,6 +121,9 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
             const int timeElapsed = (int)getTimeElapsed(processStart);
             if (timeElapsed >= currentProcess.burstTime) {
                 isProcessRunning = false;
+                const int processEnd = (int) getTimeElapsed(start);
+                waitingTime = processEnd - currentProcess.arrivalTime - currentProcess.burstTime;
+                totalWaitingTime += waitingTime;
                 if (isEmpty(&queue) && startingIDX >= procsCount) {
                     //finished
                     turnaroundTime = (int)getTimeElapsed(start);
@@ -137,6 +151,8 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
         }
         ualarm((int)1e5, 0);
     }
+
+    averageWaitingTime = totalWaitingTime / procsCount;
 
 
     printf("%d", turnaroundTime);
