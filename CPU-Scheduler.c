@@ -19,6 +19,12 @@ typedef struct
     int priority;
 } Process;
 
+typedef struct {
+    Process processes[MAX_PROC];
+    int processesCount;
+    int (*compare)(Process, Process);
+} readyQueue;
+
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount);
 Process ParseProcess(const char* line);
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum);
@@ -153,6 +159,7 @@ void sortProcesses(Process* processes, const int* processesCount, int(*compare)(
             current = processes[i];
             next = processes[i + 1];
             compResult = compare(current, next);
+
             if (compResult > 0) {
                 processes[i] = next;
                 processes[i + 1] = current;
