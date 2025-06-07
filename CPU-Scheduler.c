@@ -21,7 +21,7 @@
 #define SCHEDULER_OUTRO "\n──────────────────────────────────────────────\n"\
 ">> Engine Status  : Completed\n"\
 ">> Summary        :\n"\
-"   └─ Average Waiting Time : %d time units\n"\
+"   └─ Average Waiting Time : %.2f time units\n"\
 ">> End of Report\n"\
 "══════════════════════════════════════════════\n\n"
 
@@ -83,7 +83,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     int turnaroundTime = 0;
     int totalWaitingTime = 0;
     int waitingTime = 0;
-    int averageWaitingTime = 0;
+    double averageWaitingTime = 0;
     bool isProcessRunning = false;
     bool isIdle = false;
     struct timespec start;
@@ -152,8 +152,8 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
         ualarm((int)1e5, 0);
     }
 
-    averageWaitingTime = totalWaitingTime / procsCount;
-
+    averageWaitingTime = (double)totalWaitingTime / procsCount;
+    printf(SCHEDULER_OUTRO, averageWaitingTime);
 
     printf("%d", turnaroundTime);
 
