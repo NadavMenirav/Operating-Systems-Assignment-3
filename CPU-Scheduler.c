@@ -32,8 +32,7 @@
 #define FCFS "FCFS"
 
 
-typedef struct
-{
+typedef struct {
     char name[MAX_NAME_LENGTH];
     char description[MAX_DESCRIPTION_LENGTH];
     int arrivalTime;
@@ -47,6 +46,12 @@ typedef struct {
     int (*comparePriority)(Process, Process);
 } ReadyQueue;
 
+typedef struct {
+    char* name;
+    bool shouldPrintAverageWaitingTime;
+    bool shouldPrintTotalTurnaroundTime;
+    int (*comparePriority)(Process, Process);
+} Algorithm;
 
 
 
