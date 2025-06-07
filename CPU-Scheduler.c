@@ -22,7 +22,7 @@ typedef struct
 typedef struct {
     Process processes[MAX_PROC];
     int size;
-    int (*compare)(Process, Process);
+    int (*comparePriority)(Process, Process);
 } readyQueue;
 
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount);
@@ -30,7 +30,9 @@ Process ParseProcess(const char* line);
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum);
 void sortProcesses(Process* processes, const int* processesCount, int(*compare)(Process, Process));
 int compareArrivalTime(Process a, Process b);
-Process pop(readyQueue* queue);
+Process remove(readyQueue* queue);
+void insert(readyQueue* queue, Process process);
+int compareBurstTime(Process a, Process b);
 
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
@@ -148,7 +150,7 @@ Process ParseProcess(const char* line)
     return proc;
 }
 
-void sortProcesses(Process* processes, const int* processesCount, int(*compare)(Process, Process)) {
+void sortProcesses(Process* processes, const int processesCount, int(*compare)(Process, Process)) {
     int compResult = 0;
     bool isSwap = false;
     Process current, next;
@@ -156,7 +158,7 @@ void sortProcesses(Process* processes, const int* processesCount, int(*compare)(
 
     do {
         isSwap = false;
-        for (int i = 0; i < *processesCount - 1; i++) {
+        for (int i = 0; i < processesCount - 1; i++) {
             current = processes[i];
             next = processes[i + 1];
             compResult = compare(current, next);
@@ -174,8 +176,8 @@ int compareArrivalTime(Process a, Process b) {
     return b.arrival_time - a.arrival_time;
 }
 
-Process pop(readyQueue* queue) {
-    Process firstInstance = queue->processes[0];
+Process remove(readyQueue* queue) {
+    const Process firstInstance = queue->processes[0];
 
     for (int i = 0; i < queue->size - 1; i++) {
         queue->processes[i] = queue->processes[i + 1];
@@ -183,4 +185,11 @@ Process pop(readyQueue* queue) {
 
     queue->size = queue->size - 1;
     return firstInstance;
+}
+
+void insert(readyQueue* queue, const Process process) {
+    queue->processes[queue->size] = process;
+    sortProcesses(queue->processes, queue->size, queue->comparePriority);
+    queue->size++;
+
 }
