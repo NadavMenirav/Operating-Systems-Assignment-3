@@ -21,7 +21,7 @@ typedef struct
 
 typedef struct {
     Process processes[MAX_PROC];
-    int processesCount;
+    int size;
     int (*compare)(Process, Process);
 } readyQueue;
 
@@ -30,6 +30,7 @@ Process ParseProcess(const char* line);
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum);
 void sortProcesses(Process* processes, const int* processesCount, int(*compare)(Process, Process));
 int compareArrivalTime(Process a, Process b);
+Process pop(readyQueue* queue);
 
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
@@ -171,4 +172,15 @@ void sortProcesses(Process* processes, const int* processesCount, int(*compare)(
 
 int compareArrivalTime(Process a, Process b) {
     return b.arrival_time - a.arrival_time;
+}
+
+Process pop(readyQueue* queue) {
+    Process firstInstance = queue->processes[0];
+
+    for (int i = 0; i < queue->size - 1; i++) {
+        queue->processes[i] = queue->processes[i + 1];
+    }
+
+    queue->size = queue->size - 1;
+    return firstInstance;
 }
