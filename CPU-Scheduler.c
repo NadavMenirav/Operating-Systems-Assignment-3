@@ -106,6 +106,31 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     Process currentProcess = { 0 };
     struct sigaction sa;
 
+    //First-Come-First-Served
+    Algorithm firstComeFirstServed = { 0 };
+    firstComeFirstServed.name = "FCFS";
+    firstComeFirstServed.shouldPrintAverageWaitingTime = true;
+    firstComeFirstServed.shouldPrintTotalTurnaroundTime = false;
+
+    //Shortest-Job-First
+    Algorithm shortestJobFirst = { 0 };
+    shortestJobFirst.name = "SJF";
+    shortestJobFirst.shouldPrintAverageWaitingTime = true;
+    shortestJobFirst.shouldPrintTotalTurnaroundTime = false;
+
+    //Priority
+    Algorithm priority = { 0 };
+    priority.name = "Priority";
+    priority.shouldPrintAverageWaitingTime = true;
+    priority.shouldPrintTotalTurnaroundTime = false;
+
+    //Round-Robin
+    Algorithm roundRobin = { 0 };
+    roundRobin.name = "Round Robin";
+    roundRobin.shouldPrintAverageWaitingTime = false;
+    roundRobin.shouldPrintTotalTurnaroundTime = true;
+
+
     sa.sa_handler = dumby;
     sa.sa_flags = 0;
     sigemptyset(&sa.sa_mask);
