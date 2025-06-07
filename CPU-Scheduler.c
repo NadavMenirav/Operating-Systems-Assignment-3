@@ -40,7 +40,7 @@ ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process));
 double getTimeElapsed(struct timespec start);
 void insertNewProcesses(ReadyQueue* queue, Process processes[], int startingIDX, int processesCount, struct timespec start);
 bool isEmpty(const ReadyQueue* queue);
-
+void dumby();
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
@@ -49,9 +49,11 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     bool isProcessRunning = false;
     struct timespec start;
     struct timespec processStart;
-    Process currentProcess;
     ReadyQueue queue = createReadyQueue(dummyComparePriority); //FCFS
     Process procs[MAX_PROC];
+    Process currentProcess = { 0 };
+
+    sigaction
 
 
     /*
@@ -64,9 +66,34 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
         exit(EXIT_FAILURE);
     }
 
-    while (startingIDX < procsCount) {
+    while (startingIDX < procsCount || isEmpty(&queue) || isProcessRunning) {
+        // every 0.25 seconds we run this.
         insertNewProcesses(&queue, procs, startingIDX, procsCount, start);
-        if (!isProcessRunning && !is) {}
+
+        if (isProcessRunning) {
+            const int timeElapsed = (int)getTimeElapsed(processStart);
+            if (timeElapsed >= currentProcess.burst_time) {
+                isProcessRunning = false;
+                if (isEmpty(&queue)) {
+                    //finished
+                }
+            }
+        }
+        if (!isProcessRunning && !isEmpty(&queue)) {
+            //process starting to run
+
+            isProcessRunning = true;
+            if (clock_gettime(CLOCK_MONOTONIC, &processStart) != 0) {
+                perror("clock_gettime error");
+                exit(EXIT_FAILURE);
+            }
+            currentProcess = removeQ(&queue);
+        }
+
+        if (!isProcessRunning && isEmpty(&queue) && startingIDX < procsCount) {
+            //IDLE
+        }
+        ualarm((int)1e5, 0);
     }
 
 
@@ -263,4 +290,8 @@ void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX
 
 bool isEmpty(const ReadyQueue* queue) {
     return queue->size == 0;
+}
+
+void dumby() {
+    // i have noting
 }
