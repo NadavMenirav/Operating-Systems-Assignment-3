@@ -21,14 +21,14 @@
 #define SCHEDULER_OUTRO_WITH_WAITING "\n──────────────────────────────────────────────\n"\
 ">> Engine Status  : Completed\n"\
 ">> Summary        :\n"\
-"   └─ Average Waiting Time: %.2f time units\n"\
+"   └─ Average Waiting Time : %.2f time units\n"\
 ">> End of Report\n"\
 "══════════════════════════════════════════════\n\n"
 
 #define SCHEDULER_OUTRO_WITH_TURNAROUND "\n──────────────────────────────────────────────\n"\
 ">> Engine Status  : Completed\n"\
 ">> Summary        :\n"\
-"   └─ Total Turnaround Time: %d time units\n"\
+"   └─ Total Turnaround Time : %d time units\n\n"\
 ">> End of Report\n"\
 "══════════════════════════════════════════════\n\n"
 
@@ -395,7 +395,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
 
 
     printf(SCHEDULER_INTRO, algorithm.name);
-    while (startingIDX < processesCount || isEmpty(&queue) || isProcessRunning) {
+    while (startingIDX < processesCount || !isEmpty(&queue) || isProcessRunning) {
         // every ---- seconds we run this.
 
         if (startingIDX < processesCount) {
