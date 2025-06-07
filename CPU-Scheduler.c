@@ -72,6 +72,7 @@ void sortProcesses(Process* processes, int processesCount, int(*compare)(Process
 int compareArrivalTime(Process a, Process b);
 int compareBurstTime(Process a, Process b);
 int dummyComparePriority(Process a, Process b);
+int SJFComparePriority(Process a, Process b);
 
 // Signal handler
 void dumby();
@@ -347,6 +348,10 @@ int dummyComparePriority(Process a, Process b) {
     *  be just a regular queue
     */
     return 0;
+}
+
+int SJFComparePriority(const Process a, const Process b) {
+    return a.burstTime - b.burstTime;
 }
 
 ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process)) {
