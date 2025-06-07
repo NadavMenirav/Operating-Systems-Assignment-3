@@ -25,7 +25,8 @@
 ">> End of Report\n"\
 "══════════════════════════════════════════════\n\n"
 
-#define SCHEDULE_LINE "%d → %d: %s Running %s\n"
+#define SCHEDULE_LINE "%d → %d: %s Running %s.\n"
+#define CPU_IDLE "%d → %d: idle.\n"
 
 
 #define FCFS "FCFS"
@@ -86,6 +87,8 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     int totalWaitingTime = 0;
     int waitingTime = 0;
     int processStartSeconds = 0;
+    int idleStartSeconds = 0;
+    int idleEndSeconds = 0;
     double averageWaitingTime = 0;
     bool isProcessRunning = false;
     bool isIdle = false;
@@ -136,6 +139,11 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
                     ,currentProcess.description
                     );
 
+                if (isEmpty(&queue) && startingIDX < procsCount) {
+                    isIdle = true;
+                    idleStartSeconds = (int)getTimeElapsed(start);
+                }
+
                 waitingTime = processEndSeconds - currentProcess.arrivalTime - currentProcess.burstTime;
                 totalWaitingTime += waitingTime;
 
@@ -150,6 +158,10 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
             //process starting to run
             if (isIdle) {
                 // print
+                idleEndSeconds = (int)getTimeElapsed(start);
+                printf(CPU_IDLE, idleStartSeconds, idleEndSeconds);
+                idleStartSeconds = 0;
+                idleEndSeconds = 0;
             }
             isIdle = false;
             isProcessRunning = true;
