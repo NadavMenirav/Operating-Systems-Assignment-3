@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <time.h>
 
 #define MAX_NAME 51
 #define MAX_DESC 101
@@ -23,18 +25,19 @@ typedef struct {
     Process processes[MAX_PROC];
     int size;
     int (*comparePriority)(Process, Process);
-} readyQueue;
+} ReadyQueue;
 
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount);
 Process ParseProcess(const char* line);
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum);
-void sortProcesses(Process* processes, const int* processesCount, int(*compare)(Process, Process));
+void sortProcesses(Process* processes, int processesCount, int(*compare)(Process, Process));
 int compareArrivalTime(Process a, Process b);
-Process remove(readyQueue* queue);
-void insert(readyQueue* queue, Process process);
+Process removeQ(ReadyQueue* queue);
+void insertQ(ReadyQueue* queue, Process process);
 int compareBurstTime(Process a, Process b);
 int dummyComparePriority(Process a, Process b);
-readyQueue createReadyQueue(int (*comparePriority)(Process, Process));
+ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process));
+double getTimeElapsed(struct timespec start);
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
@@ -46,6 +49,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
      * GET PROCS FROM FILE
      */
     InitProcessesFromCSV(processesCsvFilePath, procs, &procsCount);
+    sortProcesses(procs, procsCount, compareArrivalTime);
 }
 
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount)
@@ -174,10 +178,10 @@ void sortProcesses(Process* processes, const int processesCount, int(*compare)(P
 }
 
 int compareArrivalTime(Process a, Process b) {
-    return b.arrival_time - a.arrival_time;
+    return a.arrival_time - b.arrival_time;
 }
 
-Process remove(readyQueue* queue) {
+Process remove(ReadyQueue* queue) {
     const Process firstInstance = queue->processes[0];
 
     for (int i = 0; i < queue->size - 1; i++) {
@@ -188,7 +192,7 @@ Process remove(readyQueue* queue) {
     return firstInstance;
 }
 
-void insert(readyQueue* queue, const Process process) {
+void insert(ReadyQueue* queue, const Process process) {
     queue->processes[queue->size] = process;
     sortProcesses(queue->processes, queue->size, queue->comparePriority);
     queue->size++;
@@ -202,10 +206,18 @@ int dummyComparePriority(Process a, Process b) {
     return 0;
 }
 
-readyQueue createReadyQueue(int (*comparePriority)(Process, Process)) {
+ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process)) {
+    //Creating an empty ReadyQueue
     Process processes[MAX_PROC];
-    readyQueue queue = { 0 };
+    ReadyQueue queue = { 0 };
     queue.size =  0;
     queue.comparePriority = comparePriority;
     return queue;
+}
+
+double getTimeElapsed(struct timespec start) {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
+    return (double)(now.tv_sec - start.tv_sec) + (double)(now.tv_nsec - start.tv_nsec) / 1e9;
 }
