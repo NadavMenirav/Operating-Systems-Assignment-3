@@ -7,23 +7,23 @@
 #include <signal.h>
 
 #define MAX_NAME_LENGTH 51
-#define MAX_DESC 101
-#define MAX_PROC 1000
-#define MAX_LINE 257
+#define MAX_DESCRIPTION_LENGTH 101
+#define MAX_PROCESSES 1000
+#define MAX_LINE_LENGTH 257
 
 #define CSV_DELIMS ","
 
 typedef struct
 {
-    char name[MAX_NAME];
-    char desc[MAX_DESC];
+    char name[MAX_NAME_LENGTH];
+    char desc[MAX_DESCRIPTION_LENGTH];
     int arrival_time;
     int burst_time;
     int priority;
 } Process;
 
 typedef struct {
-    Process processes[MAX_PROC];
+    Process processes[MAX_PROCESSES];
     int size;
     int (*comparePriority)(Process, Process);
 } ReadyQueue;
@@ -53,7 +53,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     struct timespec start;
     struct timespec processStart;
     ReadyQueue queue = createReadyQueue(dummyComparePriority); //FCFS
-    Process procs[MAX_PROC];
+    Process procs[MAX_PROCESSES];
     Process currentProcess = { 0 };
     struct sigaction sa;
 
@@ -132,8 +132,8 @@ void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount)
     /*
      * GETTING PROC INFORMATION
      */
-    char line[MAX_LINE];
-    while (fgets(line, MAX_LINE, file) != NULL)
+    char line[MAX_LINE_LENGTH];
+    while (fgets(line, MAX_LINE_LENGTH, file) != NULL)
     {
         Process process = ParseProcess(line);
         oprocs[*oprocsCount] = process;
@@ -248,6 +248,11 @@ int compareArrivalTime(Process a, Process b) {
 Process removeQ(ReadyQueue* queue) {
     const Process firstInstance = queue->processes[0];
 
+    if (queue->size <= 0) {
+        fprintf(stderr, "Empty queue\n");
+        exit(EXIT_FAILURE);
+    }
+
     for (int i = 0; i < queue->size - 1; i++) {
         queue->processes[i] = queue->processes[i + 1];
     }
@@ -257,10 +262,11 @@ Process removeQ(ReadyQueue* queue) {
 }
 
 void insertQ(ReadyQueue* queue, const Process process) {
-    queue->processes[queue->size] = process;
-    queue->size++;
-    sortProcesses(queue->processes, queue->size, queue->comparePriority);
-
+    if (queue->size < MAX_PROCESSES) {
+        queue->processes[queue->size] = process;
+        queue->size++;
+        sortProcesses(queue->processes, queue->size, queue->comparePriority);
+    }
 }
 
 int dummyComparePriority(Process a, Process b) {
