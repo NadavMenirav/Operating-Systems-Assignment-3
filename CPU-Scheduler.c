@@ -33,7 +33,7 @@ int compareArrivalTime(Process a, Process b);
 Process remove(readyQueue* queue);
 void insert(readyQueue* queue, Process process);
 int compareBurstTime(Process a, Process b);
-
+int dummyComparePriority(Process a, Process b);
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
@@ -192,4 +192,11 @@ void insert(readyQueue* queue, const Process process) {
     sortProcesses(queue->processes, queue->size, queue->comparePriority);
     queue->size++;
 
+}
+
+int dummyComparePriority(Process a, Process b) {
+    /*This function is used in algorithms such as FCFS where we want the priority queue to
+    *  be just a regular queue
+    */
+    return 0;
 }
