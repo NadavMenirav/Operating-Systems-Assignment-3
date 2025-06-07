@@ -72,7 +72,8 @@ void sortProcesses(Process* processes, int processesCount, int(*compare)(Process
 int compareArrivalTime(Process a, Process b);
 int compareBurstTime(Process a, Process b);
 int dummyComparePriority(Process a, Process b);
-int SJFComparePriority(Process a, Process b);
+int SJFCompare(Process a, Process b);
+int PriorityCompare(Process a, Process b);
 
 // Signal handler
 void dumby();
@@ -350,8 +351,13 @@ int dummyComparePriority(Process a, Process b) {
     return 0;
 }
 
-int SJFComparePriority(const Process a, const Process b) {
+int SJFCompare(const Process a, const Process b) {
+    // Shortest-Job-First
     return a.burstTime - b.burstTime;
+}
+
+int PriorityCompare(const Process a, const Process b) {
+    return a.priority - b.priority;
 }
 
 ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process)) {
