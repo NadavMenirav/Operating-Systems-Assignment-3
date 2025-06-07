@@ -18,18 +18,23 @@
 ">> Engine Status  : Initialized\n"\
 "──────────────────────────────────────────────\n\n"
 
-#define SCHEDULER_OUTRO "\n──────────────────────────────────────────────\n"\
+#define SCHEDULER_OUTRO_WITH_WAITING "\n──────────────────────────────────────────────\n"\
 ">> Engine Status  : Completed\n"\
 ">> Summary        :\n"\
-"   └─ %s : %.2f time units\n"\
+"   └─ Average Waiting Time: %.2f time units\n"\
+">> End of Report\n"\
+"══════════════════════════════════════════════\n\n"
+
+#define SCHEDULER_OUTRO_WITH_TURNAROUND "\n──────────────────────────────────────────────\n"\
+">> Engine Status  : Completed\n"\
+">> Summary        :\n"\
+"   └─ Total Turnaround Time: %d time units\n"\
 ">> End of Report\n"\
 "══════════════════════════════════════════════\n\n"
 
 #define SCHEDULE_LINE "%d → %d: %s Running %s.\n"
-#define CPU_IDLE "%d → %d: idle.\n"
+#define CPU_IDLE "%d → %d: Idle.\n"
 
-#define AVG_WAITING_TIME "Average Waiting Time: "
-#define TURNAROUND_TIME "Total Turnaround time: "
 
 
 #define FCFS "FCFS"
@@ -143,7 +148,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     printScheduler(firstComeFirstServed, procs, procsCount);
     printScheduler(shortestJobFirst, procs, procsCount);
     printScheduler(priority, procs, procsCount);
-
+    printScheduler(roundRobin, procs, procsCount);
 
 }
 
@@ -366,6 +371,8 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
     int processStartSeconds = 0;
     int idleStartSeconds = 0;
     int idleEndSeconds = 0;
+    int timeElapsed = 0;
+    int processEndSeconds = 0;
     bool isProcessRunning = false;
     bool isIdle = false;
 
@@ -396,12 +403,13 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
         }
 
         if (isProcessRunning) {
-            const int timeElapsed = (int)getTimeElapsed(processStart);
+            timeElapsed = (int)getTimeElapsed(processStart);
 
+            processEndSeconds = (int) getTimeElapsed(start);
             if (timeElapsed >= currentProcess.burstTime) {
                 isProcessRunning = false;
 
-                const int processEndSeconds = (int) getTimeElapsed(start);
+
 
                 printf(
                     SCHEDULE_LINE
@@ -424,6 +432,33 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                     turnaroundTime = (int)getTimeElapsed(start);
                     break;
                 }
+            }
+
+            else if (algorithm.maxCPUTime != -1) {
+                if (timeElapsed >= algorithm.maxCPUTime) {
+                    // If he finished his timeQuantom
+
+                    waitingTime = processEndSeconds - currentProcess.arrivalTime - algorithm.maxCPUTime;
+                    totalWaitingTime += waitingTime;
+                    isProcessRunning = false;
+
+
+
+                    printf(
+                        SCHEDULE_LINE
+                        ,processEndSeconds - algorithm.maxCPUTime
+                        ,processEndSeconds
+                        ,currentProcess.name
+                        ,currentProcess.description
+                    );
+
+                    // entering to end of the queue
+                    Process modifiedProcess = currentProcess;
+                    modifiedProcess.arrivalTime = processEndSeconds;
+                    modifiedProcess.burstTime -= algorithm.maxCPUTime;
+                    insertQ(&queue, modifiedProcess);
+                }
+
             }
         }
         if (!isProcessRunning && !isEmpty(&queue)) {
@@ -458,10 +493,10 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
     if (algorithm.shouldPrintAverageWaitingTime) {
         double averageWaitingTime = 0;
         averageWaitingTime = (double)totalWaitingTime / processesCount;
-        printf(SCHEDULER_OUTRO, AVG_WAITING_TIME, averageWaitingTime);
+        printf(SCHEDULER_OUTRO_WITH_WAITING, averageWaitingTime);
     }
     if (algorithm.shouldPrintTotalTurnaroundTime) {
-        printf(SCHEDULER_OUTRO, TURNAROUND_TIME, turnaroundTime);
+        printf(SCHEDULER_OUTRO_WITH_TURNAROUND, turnaroundTime);
     }
 
 
