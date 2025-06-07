@@ -39,14 +39,18 @@ int dummyComparePriority(Process a, Process b);
 ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process));
 double getTimeElapsed(struct timespec start);
 void insertNewProcesses(ReadyQueue* queue, Process processes[], int startingIDX, int processesCount, struct timespec start);
+bool isEmpty(const ReadyQueue* queue);
 
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
     int procsCount = 0;
     int startingIDX = 0;
+    bool isProcessRunning = false;
     struct timespec start;
-    ReadyQueue queue = createReadyQueue(dummyComparePriority);
+    struct timespec processStart;
+    Process currentProcess;
+    ReadyQueue queue = createReadyQueue(dummyComparePriority); //FCFS
     Process procs[MAX_PROC];
 
 
@@ -59,6 +63,13 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
         perror("clock_gettime error");
         exit(EXIT_FAILURE);
     }
+
+    while (startingIDX < procsCount) {
+        insertNewProcesses(&queue, procs, startingIDX, procsCount, start);
+        if (!isProcessRunning && !is) {}
+    }
+
+
 
 
 }
@@ -248,4 +259,8 @@ void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX
         (*startingIDX)++;
     }
 
+}
+
+bool isEmpty(const ReadyQueue* queue) {
+    return queue->size == 0;
 }
