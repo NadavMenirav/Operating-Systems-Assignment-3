@@ -74,8 +74,8 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum);
 void printScheduler(Algorithm algorithm, Process processes[], int processesCount);
 
 // Process input
-void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount);
-Process ParseProcess(const char* line);
+void initializeProcessesFromCSV(const char* path, Process outputProcs[], int* outputProcsCount);
+Process parseProcess(const char* line);
 
 // Time and arrival
 double getTimeElapsed(struct timespec start);
@@ -142,7 +142,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     /*
      * GET PROCS FROM FILE
      */
-    InitProcessesFromCSV(processesCsvFilePath, procs, &procsCount);
+    initializeProcessesFromCSV(processesCsvFilePath, procs, &procsCount);
     sortProcesses(procs, procsCount, compareArrivalTime);
 
     printScheduler(firstComeFirstServed, procs, procsCount);
@@ -152,7 +152,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 
 }
 
-void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount)
+void initializeProcessesFromCSV(const char* path, Process outputProcs[], int* outputProcsCount)
 {
     FILE* file = NULL;
 
@@ -163,16 +163,12 @@ void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount)
     }
 
 
-
-    /*
-     * GETTING PROC INFORMATION
-     */
     char line[MAX_LINE_LENGTH];
     while (fgets(line, MAX_LINE_LENGTH, file) != NULL)
     {
-        Process process = ParseProcess(line);
-        oprocs[*oprocsCount] = process;
-        (*oprocsCount)++;
+        const Process process = parseProcess(line);
+        outputProcs[*outputProcsCount] = process;
+        (*outputProcsCount)++;
     }
     if (ferror(file))
     {
@@ -181,12 +177,12 @@ void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount)
     }
 }
 
-Process ParseProcess(const char* line)
+Process parseProcess(const char* line)
 {
     char* save_ptr = NULL;
     char* dup = strdup(line);
-    char* currentValue = NULL;
-    Process proc = { 0 };
+    const char* currentValue = NULL;
+    Process processes = { 0 };
 
 
     /*
@@ -197,7 +193,7 @@ Process ParseProcess(const char* line)
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
     }
-    strcpy(proc.name, currentValue);
+    strcpy(processes.name, currentValue);
 
 
     /*
@@ -208,51 +204,32 @@ Process ParseProcess(const char* line)
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
     }
-    strcpy(proc.description, currentValue);
+    strcpy(processes.description, currentValue);
 
-
-
-    /*
-     * GETTING ARRIVAL TIME
-     */
-    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL)
-    {
+    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL) {
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
     }
-    proc.arrivalTime = atoi(currentValue);
 
+    processes.arrivalTime = atoi(currentValue);
 
-
-    /*
-     * GETTING BURST TIME
-     */
-    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL)
-    {
+    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL) {
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
     }
-    proc.burstTime = atoi(currentValue);
 
+    processes.burstTime = atoi(currentValue);
 
-
-    /*
-     * GETTING PRIORITY
-     */
-    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL)
-    {
+    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL) {
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
     }
-    proc.priority = atoi(currentValue);
 
+    processes.priority = atoi(currentValue);
 
 
     free(dup);
-
-
-
-    return proc;
+    return processes;
 }
 
 void sortProcesses(Process* processes, const int processesCount, int(*compare)(Process, Process)) {

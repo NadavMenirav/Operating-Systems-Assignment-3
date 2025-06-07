@@ -4,16 +4,19 @@
 #include <unistd.h>
 
 #define ENTER_FOCUS_MODE_MESSAGE "Entering Focus Mode. All distractions are blocked.\n"
-#define FOCUS_ROUND "══════════════════════════════════════════════\n"\
+#define FOCUS_ROUND \
+"══════════════════════════════════════════════\n"\
 "                Focus Round %d                \n"\
 "──────────────────────────────────────────────\n"
 
-#define CHECK_DISTRACTIONS "──────────────────────────────────────────────\n"\
-"        Checking pending distractions...\n"\
+#define CHECK_DISTRACTIONS \
+"──────────────────────────────────────────────\n"\
+"        Checking pending distractions...      \n"\
 "──────────────────────────────────────────────\n"\
 
-#define RETURN_TO_FOCUS "──────────────────────────────────────────────\n"\
-"             Back to Focus Mode.\n"\
+#define RETURN_TO_FOCUS \
+"──────────────────────────────────────────────\n"\
+"             Back to Focus Mode.              \n"\
 "══════════════════════════════════════════════\n"
 
 
