@@ -55,7 +55,12 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
      */
     InitProcessesFromCSV(processesCsvFilePath, procs, &procsCount);
     sortProcesses(procs, procsCount, compareArrivalTime);
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
+        perror("clock_gettime error");
+        exit(EXIT_FAILURE);
+    }
+
+
 }
 
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount)
@@ -227,7 +232,8 @@ double getTimeElapsed(const struct timespec start) {
     return (double)(now.tv_sec - start.tv_sec) + (double)(now.tv_nsec - start.tv_nsec) / 1e9;
 }
 
-void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, int processesCount, struct timespec start) {
+void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, const int processesCount, const struct timespec start) {
+    // at a given time, adds the new arriving processes
     const double currentTime = getTimeElapsed(start);
 
     if (*startingIDX >= processesCount) {
