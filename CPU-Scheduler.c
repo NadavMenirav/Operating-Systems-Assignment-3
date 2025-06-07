@@ -38,10 +38,15 @@ int compareBurstTime(Process a, Process b);
 int dummyComparePriority(Process a, Process b);
 ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process));
 double getTimeElapsed(struct timespec start);
+void insertNewProcesses(ReadyQueue* queue, Process processes[], int startingIDX, int processesCount, struct timespec start);
+
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
     int procsCount = 0;
+    int startingIDX = 0;
+    struct timespec start;
+    ReadyQueue queue = createReadyQueue(dummyComparePriority);
     Process procs[MAX_PROC];
 
 
@@ -50,6 +55,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
      */
     InitProcessesFromCSV(processesCsvFilePath, procs, &procsCount);
     sortProcesses(procs, procsCount, compareArrivalTime);
+    clock_gettime(CLOCK_MONOTONIC, &start);
 }
 
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount)
@@ -158,14 +164,13 @@ Process ParseProcess(const char* line)
 void sortProcesses(Process* processes, const int processesCount, int(*compare)(Process, Process)) {
     int compResult = 0;
     bool isSwap = false;
-    Process current, next;
 
 
     do {
         isSwap = false;
         for (int i = 0; i < processesCount - 1; i++) {
-            current = processes[i];
-            next = processes[i + 1];
+            const Process current = processes[i];
+            const Process next = processes[i + 1];
             compResult = compare(current, next);
 
             if (compResult > 0) {
@@ -200,7 +205,7 @@ void insert(ReadyQueue* queue, const Process process) {
 }
 
 int dummyComparePriority(Process a, Process b) {
-    /*This function is used in algorithms such as FCFS where we want the priority queue to
+    /*This function is used in algorithms such as FCFS where we wa nt the priority queue to
     *  be just a regular queue
     */
     return 0;
@@ -208,16 +213,33 @@ int dummyComparePriority(Process a, Process b) {
 
 ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process)) {
     //Creating an empty ReadyQueue
-    Process processes[MAX_PROC];
     ReadyQueue queue = { 0 };
     queue.size =  0;
     queue.comparePriority = comparePriority;
     return queue;
 }
 
-double getTimeElapsed(struct timespec start) {
+double getTimeElapsed(const struct timespec start) {
+    // get length of our program
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
 
     return (double)(now.tv_sec - start.tv_sec) + (double)(now.tv_nsec - start.tv_nsec) / 1e9;
+}
+
+void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, int processesCount, struct timespec start) {
+    const double currentTime = getTimeElapsed(start);
+
+    if (*startingIDX >= processesCount) {
+        fprintf(stderr, "Invalid arguments\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    while ((*startingIDX < processesCount) && (processes[*startingIDX].arrival_time <=  currentTime)) {
+        //currentTime = getTimeElapsed(start);
+        insert(queue, processes[*startingIDX]);
+        (*startingIDX)++;
+    }
+
 }
