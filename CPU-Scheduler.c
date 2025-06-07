@@ -25,6 +25,8 @@
 ">> End of Report\n"\
 "══════════════════════════════════════════════\n\n"
 
+#define SCHEDULE_LINE "%d → %d: %s Running %s\n"
+
 
 #define FCFS "FCFS"
 
@@ -83,6 +85,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     int turnaroundTime = 0;
     int totalWaitingTime = 0;
     int waitingTime = 0;
+    int processStartSeconds = 0;
     double averageWaitingTime = 0;
     bool isProcessRunning = false;
     bool isIdle = false;
@@ -119,11 +122,23 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 
         if (isProcessRunning) {
             const int timeElapsed = (int)getTimeElapsed(processStart);
+
             if (timeElapsed >= currentProcess.burstTime) {
                 isProcessRunning = false;
-                const int processEnd = (int) getTimeElapsed(start);
-                waitingTime = processEnd - currentProcess.arrivalTime - currentProcess.burstTime;
+
+                const int processEndSeconds = (int) getTimeElapsed(start);
+
+                printf(
+                    SCHEDULE_LINE
+                    ,processStartSeconds
+                    ,processEndSeconds
+                    ,currentProcess.name
+                    ,currentProcess.description
+                    );
+
+                waitingTime = processEndSeconds - currentProcess.arrivalTime - currentProcess.burstTime;
                 totalWaitingTime += waitingTime;
+
                 if (isEmpty(&queue) && startingIDX >= procsCount) {
                     //finished
                     turnaroundTime = (int)getTimeElapsed(start);
@@ -142,6 +157,10 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
                 perror("clock_gettime error");
                 exit(EXIT_FAILURE);
             }
+
+            processStartSeconds = (int)getTimeElapsed(start);
+
+
             currentProcess = removeQ(&queue);
         }
 
