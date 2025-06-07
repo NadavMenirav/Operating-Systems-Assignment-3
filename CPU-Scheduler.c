@@ -6,7 +6,7 @@
 #include <time.h>
 #include <signal.h>
 
-#define MAX_NAME 51
+#define MAX_NAME_LENGTH 51
 #define MAX_DESC 101
 #define MAX_PROC 1000
 #define MAX_LINE 257
@@ -39,7 +39,7 @@ int compareBurstTime(Process a, Process b);
 int dummyComparePriority(Process a, Process b);
 ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process));
 double getTimeElapsed(struct timespec start);
-void insertNewProcesses(ReadyQueue* queue, Process processes[], int startingIDX, int processesCount, struct timespec start);
+void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, const int processesCount, const struct timespec start);
 bool isEmpty(const ReadyQueue* queue);
 void dumby();
 
@@ -49,6 +49,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     int startingIDX = 0;
     int turnaroundTime = 0;
     bool isProcessRunning = false;
+    bool isIdle = false;
     struct timespec start;
     struct timespec processStart;
     ReadyQueue queue = createReadyQueue(dummyComparePriority); //FCFS
@@ -74,7 +75,10 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 
     while (startingIDX < procsCount || isEmpty(&queue) || isProcessRunning) {
         // every ---- seconds we run this.
-        insertNewProcesses(&queue, procs, startingIDX, procsCount, start);
+
+        if (startingIDX < procsCount) {
+            insertNewProcesses(&queue, procs, &startingIDX, procsCount, start);
+        }
 
         if (isProcessRunning) {
             const int timeElapsed = (int)getTimeElapsed(processStart);
@@ -82,13 +86,17 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
                 isProcessRunning = false;
                 if (isEmpty(&queue) && startingIDX >= procsCount) {
                     //finished
-                    turnaroundTime = timeElapsed;
+                    turnaroundTime = (int)getTimeElapsed(start);
+                    break;
                 }
             }
         }
         if (!isProcessRunning && !isEmpty(&queue)) {
             //process starting to run
-
+            if (isIdle) {
+                // print
+            }
+            isIdle = false;
             isProcessRunning = true;
             if (clock_gettime(CLOCK_MONOTONIC, &processStart) != 0) {
                 perror("clock_gettime error");
@@ -98,13 +106,14 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
         }
 
         if (!isProcessRunning && isEmpty(&queue) && startingIDX < procsCount) {
-            //IDLE
+            // Idle
+            isIdle = true;
         }
         ualarm((int)1e5, 0);
     }
 
 
-
+    printf("%d", turnaroundTime);
 
 }
 
@@ -236,7 +245,7 @@ int compareArrivalTime(Process a, Process b) {
     return a.arrival_time - b.arrival_time;
 }
 
-Process remove(ReadyQueue* queue) {
+Process removeQ(ReadyQueue* queue) {
     const Process firstInstance = queue->processes[0];
 
     for (int i = 0; i < queue->size - 1; i++) {
@@ -247,10 +256,10 @@ Process remove(ReadyQueue* queue) {
     return firstInstance;
 }
 
-void insert(ReadyQueue* queue, const Process process) {
+void insertQ(ReadyQueue* queue, const Process process) {
     queue->processes[queue->size] = process;
-    sortProcesses(queue->processes, queue->size, queue->comparePriority);
     queue->size++;
+    sortProcesses(queue->processes, queue->size, queue->comparePriority);
 
 }
 
@@ -281,7 +290,7 @@ void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX
     // at a given time, adds the new arriving processes
     const double currentTime = getTimeElapsed(start);
 
-    if (*startingIDX >= processesCount) {
+    if ((*startingIDX) >= processesCount) {
         fprintf(stderr, "Invalid arguments\n");
         exit(EXIT_FAILURE);
     }
@@ -289,7 +298,7 @@ void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX
 
     while ((*startingIDX < processesCount) && (processes[*startingIDX].arrival_time <=  currentTime)) {
         //currentTime = getTimeElapsed(start);
-        insert(queue, processes[*startingIDX]);
+        insertQ(queue, processes[*startingIDX]);
         (*startingIDX)++;
     }
 
