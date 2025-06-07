@@ -21,15 +21,21 @@
 #define SCHEDULER_OUTRO "\n──────────────────────────────────────────────\n"\
 ">> Engine Status  : Completed\n"\
 ">> Summary        :\n"\
-"   └─ Average Waiting Time : %.2f time units\n"\
+"   └─ %s : %.2f time units\n"\
 ">> End of Report\n"\
 "══════════════════════════════════════════════\n\n"
 
 #define SCHEDULE_LINE "%d → %d: %s Running %s.\n"
 #define CPU_IDLE "%d → %d: idle.\n"
 
+#define AVG_WAITING_TIME "Average Waiting Time: "
+#define TURNAROUND_TIME "Total Turnaround time: "
+
 
 #define FCFS "FCFS"
+#define RR "Round Robin"
+#define SJF "SJF"
+#define PRIORITY "Priority"
 
 
 typedef struct {
@@ -57,6 +63,9 @@ typedef struct {
 
 // Main control
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum);
+
+// Process output
+void printScheduler(Algorithm algorithm, Process processes[], int processesCount);
 
 // Process input
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount);
@@ -89,38 +98,27 @@ void dumby();
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
     int procsCount = 0;
-    int startingIDX = 0;
-    int turnaroundTime = 0;
-    int totalWaitingTime = 0;
-    int waitingTime = 0;
-    int processStartSeconds = 0;
-    int idleStartSeconds = 0;
-    int idleEndSeconds = 0;
-    double averageWaitingTime = 0;
-    bool isProcessRunning = false;
-    bool isIdle = false;
-    struct timespec start;
-    struct timespec processStart;
-    ReadyQueue queue = createReadyQueue(dummyComparePriority); //FCFS
     Process procs[MAX_PROCESSES];
-    Process currentProcess = { 0 };
-    struct sigaction sa;
+
 
     //First-Come-First-Served
     Algorithm firstComeFirstServed = { 0 };
     firstComeFirstServed.name = "FCFS";
+    firstComeFirstServed.comparePriority = dummyComparePriority;
     firstComeFirstServed.shouldPrintAverageWaitingTime = true;
     firstComeFirstServed.shouldPrintTotalTurnaroundTime = false;
 
     //Shortest-Job-First
     Algorithm shortestJobFirst = { 0 };
     shortestJobFirst.name = "SJF";
+    shortestJobFirst.comparePriority = SJFCompare;
     shortestJobFirst.shouldPrintAverageWaitingTime = true;
     shortestJobFirst.shouldPrintTotalTurnaroundTime = false;
 
     //Priority
     Algorithm priority = { 0 };
     priority.name = "Priority";
+    priority.comparePriority = PriorityCompare;
     priority.shouldPrintAverageWaitingTime = true;
     priority.shouldPrintTotalTurnaroundTime = false;
 
@@ -130,95 +128,16 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     roundRobin.shouldPrintAverageWaitingTime = false;
     roundRobin.shouldPrintTotalTurnaroundTime = true;
 
-
-    sa.sa_handler = dumby;
-    sa.sa_flags = 0;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGALRM, &sa, NULL);
-
-
     /*
      * GET PROCS FROM FILE
      */
     InitProcessesFromCSV(processesCsvFilePath, procs, &procsCount);
     sortProcesses(procs, procsCount, compareArrivalTime);
-    if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
-        perror("clock_gettime error");
-        exit(EXIT_FAILURE);
-    }
 
-    printf(SCHEDULER_INTRO, FCFS);
-    while (startingIDX < procsCount || isEmpty(&queue) || isProcessRunning) {
-        // every ---- seconds we run this.
+    printScheduler(firstComeFirstServed, procs, procsCount);
+    printScheduler(shortestJobFirst, procs, procsCount);
+    printScheduler(priority, procs, procsCount);
 
-        if (startingIDX < procsCount) {
-            insertNewProcesses(&queue, procs, &startingIDX, procsCount, start);
-        }
-
-        if (isProcessRunning) {
-            const int timeElapsed = (int)getTimeElapsed(processStart);
-
-            if (timeElapsed >= currentProcess.burstTime) {
-                isProcessRunning = false;
-
-                const int processEndSeconds = (int) getTimeElapsed(start);
-
-                printf(
-                    SCHEDULE_LINE
-                    ,processStartSeconds
-                    ,processEndSeconds
-                    ,currentProcess.name
-                    ,currentProcess.description
-                    );
-
-                if (isEmpty(&queue) && startingIDX < procsCount) {
-                    isIdle = true;
-                    idleStartSeconds = (int)getTimeElapsed(start);
-                }
-
-                waitingTime = processEndSeconds - currentProcess.arrivalTime - currentProcess.burstTime;
-                totalWaitingTime += waitingTime;
-
-                if (isEmpty(&queue) && startingIDX >= procsCount) {
-                    //finished
-                    turnaroundTime = (int)getTimeElapsed(start);
-                    break;
-                }
-            }
-        }
-        if (!isProcessRunning && !isEmpty(&queue)) {
-            //process starting to run
-            if (isIdle) {
-                // print
-                idleEndSeconds = (int)getTimeElapsed(start);
-                printf(CPU_IDLE, idleStartSeconds, idleEndSeconds);
-                idleStartSeconds = 0;
-                idleEndSeconds = 0;
-            }
-            isIdle = false;
-            isProcessRunning = true;
-            if (clock_gettime(CLOCK_MONOTONIC, &processStart) != 0) {
-                perror("clock_gettime error");
-                exit(EXIT_FAILURE);
-            }
-
-            processStartSeconds = (int)getTimeElapsed(start);
-
-
-            currentProcess = removeQ(&queue);
-        }
-
-        if (!isProcessRunning && isEmpty(&queue) && startingIDX < procsCount) {
-            // Idle
-            isIdle = true;
-        }
-        ualarm((int)1e5, 0);
-    }
-
-    averageWaitingTime = (double)totalWaitingTime / procsCount;
-    printf(SCHEDULER_OUTRO, averageWaitingTime);
-
-    printf("%d", turnaroundTime);
 
 }
 
@@ -346,7 +265,7 @@ void sortProcesses(Process* processes, const int processesCount, int(*compare)(P
     } while (isSwap);
 }
 
-int compareArrivalTime(Process a, Process b) {
+int compareArrivalTime(const Process a, const Process b) {
     return a.arrivalTime - b.arrivalTime;
 }
 
@@ -430,4 +349,116 @@ bool isEmpty(const ReadyQueue* queue) {
 
 void dumby() {
     // i have noting
+}
+
+
+void printScheduler(Algorithm algorithm, Process processes[], const int processesCount) {
+    int startingIDX = 0;
+    int turnaroundTime = 0;
+    int totalWaitingTime = 0;
+    int waitingTime = 0;
+    int processStartSeconds = 0;
+    int idleStartSeconds = 0;
+    int idleEndSeconds = 0;
+    bool isProcessRunning = false;
+    bool isIdle = false;
+
+    struct timespec processStart;
+    ReadyQueue queue = createReadyQueue(algorithm.comparePriority); //FCFS
+    Process currentProcess = { 0 };
+
+    struct sigaction sa;
+    struct timespec start;
+
+    sa.sa_handler = dumby;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGALRM, &sa, NULL);
+
+    if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
+        perror("clock_gettime error");
+        exit(EXIT_FAILURE);
+    }
+
+
+    printf(SCHEDULER_INTRO, algorithm.name);
+    while (startingIDX < processesCount || isEmpty(&queue) || isProcessRunning) {
+        // every ---- seconds we run this.
+
+        if (startingIDX < processesCount) {
+            insertNewProcesses(&queue, processes, &startingIDX, processesCount, start);
+        }
+
+        if (isProcessRunning) {
+            const int timeElapsed = (int)getTimeElapsed(processStart);
+
+            if (timeElapsed >= currentProcess.burstTime) {
+                isProcessRunning = false;
+
+                const int processEndSeconds = (int) getTimeElapsed(start);
+
+                printf(
+                    SCHEDULE_LINE
+                    ,processStartSeconds
+                    ,processEndSeconds
+                    ,currentProcess.name
+                    ,currentProcess.description
+                    );
+
+                if (isEmpty(&queue) && startingIDX < processesCount) {
+                    isIdle = true;
+                    idleStartSeconds = (int)getTimeElapsed(start);
+                }
+
+                waitingTime = processEndSeconds - currentProcess.arrivalTime - currentProcess.burstTime;
+                totalWaitingTime += waitingTime;
+
+                if (isEmpty(&queue) && startingIDX >= processesCount) {
+                    //finished
+                    turnaroundTime = (int)getTimeElapsed(start);
+                    break;
+                }
+            }
+        }
+        if (!isProcessRunning && !isEmpty(&queue)) {
+            //process starting to run
+            if (isIdle) {
+                // print
+                idleEndSeconds = (int)getTimeElapsed(start);
+                printf(CPU_IDLE, idleStartSeconds, idleEndSeconds);
+                idleStartSeconds = 0;
+                idleEndSeconds = 0;
+            }
+            isIdle = false;
+            isProcessRunning = true;
+            if (clock_gettime(CLOCK_MONOTONIC, &processStart) != 0) {
+                perror("clock_gettime error");
+                exit(EXIT_FAILURE);
+            }
+
+            processStartSeconds = (int)getTimeElapsed(start);
+
+
+            currentProcess = removeQ(&queue);
+        }
+
+        if (!isProcessRunning && isEmpty(&queue) && startingIDX < processesCount) {
+            // Idle
+            isIdle = true;
+        }
+        ualarm((int)1e5, 0);
+    }
+
+    if (algorithm.shouldPrintAverageWaitingTime) {
+        double averageWaitingTime = 0;
+        averageWaitingTime = (double)totalWaitingTime / processesCount;
+        printf(SCHEDULER_OUTRO, AVG_WAITING_TIME, averageWaitingTime);
+    }
+    if (algorithm.shouldPrintTotalTurnaroundTime) {
+        printf(SCHEDULER_OUTRO, TURNAROUND_TIME, turnaroundTime);
+    }
+
+
+
+
 }
