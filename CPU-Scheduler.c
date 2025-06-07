@@ -57,6 +57,7 @@ typedef struct {
     bool shouldPrintAverageWaitingTime;
     bool shouldPrintTotalTurnaroundTime;
     int (*comparePriority)(Process, Process);
+    int maxCPUTime; // Used for RR
 } Algorithm;
 
 
@@ -107,6 +108,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     firstComeFirstServed.comparePriority = dummyComparePriority;
     firstComeFirstServed.shouldPrintAverageWaitingTime = true;
     firstComeFirstServed.shouldPrintTotalTurnaroundTime = false;
+    firstComeFirstServed.maxCPUTime = -1;
 
     //Shortest-Job-First
     Algorithm shortestJobFirst = { 0 };
@@ -114,6 +116,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     shortestJobFirst.comparePriority = SJFCompare;
     shortestJobFirst.shouldPrintAverageWaitingTime = true;
     shortestJobFirst.shouldPrintTotalTurnaroundTime = false;
+    shortestJobFirst.maxCPUTime = -1;
 
     //Priority
     Algorithm priority = { 0 };
@@ -121,12 +124,15 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     priority.comparePriority = PriorityCompare;
     priority.shouldPrintAverageWaitingTime = true;
     priority.shouldPrintTotalTurnaroundTime = false;
+    priority.maxCPUTime = -1;
 
     //Round-Robin
     Algorithm roundRobin = { 0 };
     roundRobin.name = "Round Robin";
+    roundRobin.comparePriority = dummyComparePriority;
     roundRobin.shouldPrintAverageWaitingTime = false;
     roundRobin.shouldPrintTotalTurnaroundTime = true;
+    roundRobin.maxCPUTime = timeQuantum;
 
     /*
      * GET PROCS FROM FILE
@@ -352,7 +358,7 @@ void dumby() {
 }
 
 
-void printScheduler(Algorithm algorithm, Process processes[], const int processesCount) {
+void printScheduler(const Algorithm algorithm, Process processes[], const int processesCount) {
     int startingIDX = 0;
     int turnaroundTime = 0;
     int totalWaitingTime = 0;
