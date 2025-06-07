@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #define MAX_NAME 51
 #define MAX_DESC 101
@@ -16,11 +17,14 @@ typedef struct
     int arrival_time;
     int burst_time;
     int priority;
-    int original_idx;
 } Process;
 
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount);
 Process ParseProcess(const char* line);
+void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum);
+void sortProcesses(Process* processes, const int* processesCount, int(*compare)(Process, Process));
+int compareArrivalTime(Process a, Process b);
+
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
@@ -32,13 +36,6 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
      * GET PROCS FROM FILE
      */
     InitProcessesFromCSV(processesCsvFilePath, procs, &procsCount);
-
-
-
-    /*
-     *
-     */
-
 }
 
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount)
@@ -59,7 +56,8 @@ void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount)
     char line[MAX_LINE];
     while (fgets(line, MAX_LINE, file) != NULL)
     {
-        oprocs[*oprocsCount] = ParseProcess(line);
+        Process process = ParseProcess(line);
+        oprocs[*oprocsCount] = process;
         (*oprocsCount)++;
     }
     if (ferror(file))
@@ -141,4 +139,29 @@ Process ParseProcess(const char* line)
 
 
     return proc;
+}
+
+void sortProcesses(Process* processes, const int* processesCount, int(*compare)(Process, Process)) {
+    int compResult = 0;
+    bool isSwap = false;
+    Process current, next;
+
+
+    do {
+        isSwap = false;
+        for (int i = 0; i < *processesCount - 1; i++) {
+            current = processes[i];
+            next = processes[i + 1];
+            compResult = compare(current, next);
+            if (compResult > 0) {
+                processes[i] = next;
+                processes[i + 1] = current;
+                isSwap = true;
+            }
+        }
+    } while (isSwap);
+}
+
+int compareArrivalTime(Process a, Process b) {
+    return b.arrival_time - a.arrival_time;
 }
