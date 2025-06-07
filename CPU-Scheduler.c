@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
+#include <signal.h>
 
 #define MAX_NAME 51
 #define MAX_DESC 101
@@ -46,14 +47,19 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
     int procsCount = 0;
     int startingIDX = 0;
+    int turnaroundTime = 0;
     bool isProcessRunning = false;
     struct timespec start;
     struct timespec processStart;
     ReadyQueue queue = createReadyQueue(dummyComparePriority); //FCFS
     Process procs[MAX_PROC];
     Process currentProcess = { 0 };
+    struct sigaction sa;
 
-    sigaction
+    sa.sa_handler = dumby;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGALRM, &sa, NULL);
 
 
     /*
@@ -67,15 +73,16 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     }
 
     while (startingIDX < procsCount || isEmpty(&queue) || isProcessRunning) {
-        // every 0.25 seconds we run this.
+        // every ---- seconds we run this.
         insertNewProcesses(&queue, procs, startingIDX, procsCount, start);
 
         if (isProcessRunning) {
             const int timeElapsed = (int)getTimeElapsed(processStart);
             if (timeElapsed >= currentProcess.burst_time) {
                 isProcessRunning = false;
-                if (isEmpty(&queue)) {
+                if (isEmpty(&queue) && startingIDX >= procsCount) {
                     //finished
+                    turnaroundTime = timeElapsed;
                 }
             }
         }
