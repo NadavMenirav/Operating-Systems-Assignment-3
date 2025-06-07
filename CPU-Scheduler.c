@@ -34,6 +34,7 @@ Process remove(readyQueue* queue);
 void insert(readyQueue* queue, Process process);
 int compareBurstTime(Process a, Process b);
 int dummyComparePriority(Process a, Process b);
+readyQueue createReadyQueue(int (*comparePriority)(Process, Process));
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
@@ -199,4 +200,12 @@ int dummyComparePriority(Process a, Process b) {
     *  be just a regular queue
     */
     return 0;
+}
+
+readyQueue createReadyQueue(int (*comparePriority)(Process, Process)) {
+    Process processes[MAX_PROC];
+    readyQueue queue = { 0 };
+    queue.size =  0;
+    queue.comparePriority = comparePriority;
+    return queue;
 }
