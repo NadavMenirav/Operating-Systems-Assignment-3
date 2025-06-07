@@ -11,14 +11,22 @@
 #define MAX_PROCESSES 1000
 #define MAX_LINE_LENGTH 257
 
-#define CSV_DELIMS ","
+#define CSV_DELIMITERS ","
+
+#define SCHEDULER_INTRO "══════════════════════════════════════════════\n"\
+">> Scheduler Mode : %s\n"\
+">> Engine Status  : Initialized\n"\
+"──────────────────────────────────────────────\n\n"
+
+#define FCFS "FCFS"
+
 
 typedef struct
 {
     char name[MAX_NAME_LENGTH];
-    char desc[MAX_DESCRIPTION_LENGTH];
-    int arrival_time;
-    int burst_time;
+    char description[MAX_DESCRIPTION_LENGTH];
+    int arrivalTime;
+    int burstTime;
     int priority;
 } Process;
 
@@ -28,20 +36,37 @@ typedef struct {
     int (*comparePriority)(Process, Process);
 } ReadyQueue;
 
+
+
+
+// Main control
+void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum);
+
+// Process input
 void InitProcessesFromCSV(const char* path, Process oprocs[], int* oprocsCount);
 Process ParseProcess(const char* line);
-void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum);
+
+// Time and arrival
+double getTimeElapsed(struct timespec start);
+void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, int processesCount, struct timespec start);
+
+// Ready queue
+ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process));
+bool isEmpty(const ReadyQueue* queue);
+Process removeQ(ReadyQueue* queue);
+void insertQ(ReadyQueue* queue, Process process); // or insert()
+
+// Sorting and comparing
 void sortProcesses(Process* processes, int processesCount, int(*compare)(Process, Process));
 int compareArrivalTime(Process a, Process b);
-Process removeQ(ReadyQueue* queue);
-void insertQ(ReadyQueue* queue, Process process);
 int compareBurstTime(Process a, Process b);
 int dummyComparePriority(Process a, Process b);
-ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process));
-double getTimeElapsed(struct timespec start);
-void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, const int processesCount, const struct timespec start);
-bool isEmpty(const ReadyQueue* queue);
+
+// Signal handler
 void dumby();
+
+
+
 
 void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 {
@@ -73,6 +98,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
         exit(EXIT_FAILURE);
     }
 
+    printf(SCHEDULER_INTRO, FCFS);
     while (startingIDX < procsCount || isEmpty(&queue) || isProcessRunning) {
         // every ---- seconds we run this.
 
@@ -82,7 +108,7 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
 
         if (isProcessRunning) {
             const int timeElapsed = (int)getTimeElapsed(processStart);
-            if (timeElapsed >= currentProcess.burst_time) {
+            if (timeElapsed >= currentProcess.burstTime) {
                 isProcessRunning = false;
                 if (isEmpty(&queue) && startingIDX >= procsCount) {
                     //finished
@@ -157,7 +183,7 @@ Process ParseProcess(const char* line)
     /*
      * GETTING NAME
      */
-    if ((currentValue = strtok_r(dup, CSV_DELIMS, &save_ptr)) == NULL)
+    if ((currentValue = strtok_r(dup, CSV_DELIMITERS, &save_ptr)) == NULL)
     {
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
@@ -166,45 +192,45 @@ Process ParseProcess(const char* line)
 
 
     /*
-     * GETTING DESC
+     * GETTING description
      */
-    if ((currentValue = strtok_r(NULL, CSV_DELIMS, &save_ptr)) == NULL)
+    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL)
     {
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
     }
-    strcpy(proc.desc, currentValue);
+    strcpy(proc.description, currentValue);
 
 
 
     /*
      * GETTING ARRIVAL TIME
      */
-    if ((currentValue = strtok_r(NULL, CSV_DELIMS, &save_ptr)) == NULL)
+    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL)
     {
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
     }
-    proc.arrival_time = atoi(currentValue);
+    proc.arrivalTime = atoi(currentValue);
 
 
 
     /*
      * GETTING BURST TIME
      */
-    if ((currentValue = strtok_r(NULL, CSV_DELIMS, &save_ptr)) == NULL)
+    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL)
     {
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
     }
-    proc.burst_time = atoi(currentValue);
+    proc.burstTime = atoi(currentValue);
 
 
 
     /*
      * GETTING PRIORITY
      */
-    if ((currentValue = strtok_r(NULL, CSV_DELIMS, &save_ptr)) == NULL)
+    if ((currentValue = strtok_r(NULL, CSV_DELIMITERS, &save_ptr)) == NULL)
     {
         perror("strtok_r() error");
         exit(EXIT_FAILURE);
@@ -242,7 +268,7 @@ void sortProcesses(Process* processes, const int processesCount, int(*compare)(P
 }
 
 int compareArrivalTime(Process a, Process b) {
-    return a.arrival_time - b.arrival_time;
+    return a.arrivalTime - b.arrivalTime;
 }
 
 Process removeQ(ReadyQueue* queue) {
@@ -302,7 +328,7 @@ void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX
     }
 
 
-    while ((*startingIDX < processesCount) && (processes[*startingIDX].arrival_time <=  currentTime)) {
+    while ((*startingIDX < processesCount) && (processes[*startingIDX].arrivalTime <=  currentTime)) {
         //currentTime = getTimeElapsed(start);
         insertQ(queue, processes[*startingIDX]);
         (*startingIDX)++;
