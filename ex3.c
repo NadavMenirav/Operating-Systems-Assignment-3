@@ -3,8 +3,11 @@
 #include <string.h>
 
 #include "Focus-Mode.c"
+#include "CPU-Scheduler.c"
+
 
 #define FOCUS_MODE_ARG_COUNT 3
+#define CPU_SCHEDULER_ARG_COUNT 3
 #define FOCUS_MODE "Focus-Mode"
 #define CPU_Scheduler "CPU-Scheduler"
 #define WRONG_ARG_COUNT_MESSAGE "Usage: %s <Focus-Mode/CPU-Schedule> <Num-Of-Rounds/Processes.csv> <Round-Duration/Time-Quantum>"
@@ -25,6 +28,18 @@ int main(const int argc, const char** argv) {
         const int numOfRounds = atoi(argv[2]);
         const int duration = atoi(argv[3]);
         runFocusMode(numOfRounds, duration); //starting focus mode
+        exit(EXIT_SUCCESS);
+    }
+    else if (strcmp(mode, CPU_Scheduler) == 0) {
+        if (argc != CPU_SCHEDULER_ARG_COUNT + 1) { // +1 for file name
+            printf(WRONG_ARG_COUNT_MESSAGE, argv[0]);
+            exit(WRONG_ARG_COUNT_EXIT_STATUS);
+        }
+        const char* processesCsvFilePath = argv[2];
+        int timeQuantum = atoi(argv[3]);
+
+        HandleCPUScheduler(processesCsvFilePath, timeQuantum);
+        exit(EXIT_SUCCESS);
     }
     return 0;
 }
