@@ -163,18 +163,22 @@ void initializeProcessesFromCSV(const char* path, Process outputProcs[], int* ou
     }
 
 
-    char line[MAX_LINE_LENGTH];
-    while (fgets(line, MAX_LINE_LENGTH, file) != NULL)
-    {
+    char* line = NULL;
+    size_t len = 0;
+    ssize_t read;
+        while ((read = getline(&line, &len, file)) != -1) {
         const Process process = parseProcess(line);
         outputProcs[*outputProcsCount] = process;
         (*outputProcsCount)++;
     }
-    if (ferror(file))
-    {
-        perror("fgets() error:");
+
+    if (ferror(file)) {
+        perror("getline() error:");
+        free(line);
+        fclose(file);
         exit(EXIT_FAILURE);
     }
+
 }
 
 Process parseProcess(const char* line)

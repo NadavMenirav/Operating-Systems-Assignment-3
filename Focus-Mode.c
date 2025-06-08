@@ -205,6 +205,7 @@ int findInPending(const int* receivedSignals, const int receivedSignalsCount, co
 }
 
 void printMessages(const int* receivedSignals, const int receivedSignalsCount) {
+
     printf(CHECK_DISTRACTIONS);
 
     if (receivedSignalsCount == 0) {
