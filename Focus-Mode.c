@@ -232,6 +232,8 @@ void printMessages(const int* receivedSignals, const int receivedSignalsCount) {
                 exit(EXIT_FAILURE);
 
         }
+
+    }
         if (isEmailReceived) {
             printf(EMAIL_DISTRACTION);
         }
@@ -241,7 +243,6 @@ void printMessages(const int* receivedSignals, const int receivedSignalsCount) {
         if (isDoorbellReceived) {
             printf(DOORBELL_DISTRACTION);
         }
-    }
 }
 
 void dummy() {

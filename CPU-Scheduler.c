@@ -481,6 +481,14 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
     }
 
 
+    }
 
+    void restoreSignalsToDefault() {
+        struct sigaction sa;
+        sa.sa_handler = SIG_DFL;
+        sigemptyset(&sa.sa_mask);
+        sa.sa_flags = 0;
 
-}
+        sigaction(SIGALRM, &sa, NULL);
+
+    }
