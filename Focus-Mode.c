@@ -205,6 +205,9 @@ int findInPending(const int* receivedSignals, const int receivedSignalsCount, co
 }
 
 void printMessages(const int* receivedSignals, const int receivedSignalsCount) {
+    boolean isEmailReceived = false;
+    boolean isReminderReceived = false;
+    boolean isDoorbellReceived = false;
 
     printf(CHECK_DISTRACTIONS);
 
@@ -217,17 +220,26 @@ void printMessages(const int* receivedSignals, const int receivedSignalsCount) {
         currentSignal = receivedSignals[i];
         switch (currentSignal) {
             case SIGUSR1:
-                printf(EMAIL_DISTRACTION);
+                isEmailReceived = true;
                 break;
             case SIGUSR2:
-                printf(DELIVERY_DISTRACTION);
+                isReminderReceived = true;
                 break;
             case SIGINT:
-                printf(DOORBELL_DISTRACTION);
+                isDoorbellReceived = true;
                 break;
             default:
                 exit(EXIT_FAILURE);
 
+        }
+        if (isEmailReceived) {
+            printf(EMAIL_DISTRACTION);
+        }
+        if (isReminderReceived) {
+            printf(DELIVERY_DISTRACTION);
+        }
+        if (isDoorbellReceived) {
+            printf(DOORBELL_DISTRACTION);
         }
     }
 }
