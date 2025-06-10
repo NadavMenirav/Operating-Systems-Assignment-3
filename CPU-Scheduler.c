@@ -165,8 +165,7 @@ void initializeProcessesFromCSV(const char* path, Process outputProcs[], int* ou
 
     char* line = NULL;
     size_t len = 0;
-    ssize_t read;
-        while ((read = getline(&line, &len, file)) != -1) {
+        while ((getline(&line, &len, file)) != -1) {
         const Process process = parseProcess(line);
         outputProcs[*outputProcsCount] = process;
         (*outputProcsCount)++;
@@ -417,7 +416,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
 
             else if (algorithm.maxCPUTime != -1) {
                 if (timeElapsed >= algorithm.maxCPUTime) {
-                    // If he finished his timeQuantom
+                    // If he finished his time Quantum
 
                     waitingTime = processEndSeconds - currentProcess.arrivalTime - algorithm.maxCPUTime;
                     totalWaitingTime += waitingTime;
@@ -449,7 +448,6 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                 idleEndSeconds = (int)getTimeElapsed(start);
                 printf(CPU_IDLE, idleStartSeconds, idleEndSeconds);
                 idleStartSeconds = 0;
-                idleEndSeconds = 0;
             }
             isIdle = false;
             isProcessRunning = true;
