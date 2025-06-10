@@ -272,12 +272,16 @@ Process removeQ(ReadyQueue* queue) {
         queue->processes[i] = queue->processes[i + 1];
     }
 
+    const Process nullProcess = { 0 };
+    queue->processes[queue->size - 1] = nullProcess;
+
     queue->size = queue->size - 1;
     return firstInstance;
 }
 
 void insertQ(ReadyQueue* queue, const Process process) {
     if (queue->size < MAX_PROCESSES) {
+        printf("inserting process %s\n", process.name);
         queue->processes[queue->size] = process;
         queue->size++;
         sortProcesses(queue->processes, queue->size, queue->comparePriority);
@@ -328,6 +332,7 @@ void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX
 
     while ((*startingIDX < processesCount) && (processes[*startingIDX].arrivalTime <=  currentTime)) {
         //currentTime = getTimeElapsed(start);
+        //printf("Insert process no. %d\n", *startingIDX + 1);
         insertQ(queue, processes[*startingIDX]);
         (*startingIDX)++;
     }
@@ -385,7 +390,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
         if (isProcessRunning) {
             timeElapsed = (int)getTimeElapsed(processStart);
 
-            processEndSeconds = (int) getTimeElapsed(start);
+            processEndSeconds = (int) getTimeElapsed(start); // how long the scheduler is running
             if (timeElapsed >= currentProcess.burstTime) {
                 isProcessRunning = false;
 
@@ -459,6 +464,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
             processStartSeconds = (int)getTimeElapsed(start);
 
 
+            printf("The head of queue: %s\n", queue.processes[0].name);
             currentProcess = removeQ(&queue);
         }
 
@@ -479,7 +485,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
     }
 
 
-    }
+}
 
     void restoreSignalsToDefault() {
         struct sigaction sa;
