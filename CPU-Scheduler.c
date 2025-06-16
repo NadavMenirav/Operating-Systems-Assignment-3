@@ -388,8 +388,12 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
         timeElapsed = (int)getTimeElapsed(processStart);
 
 
-        if (startingIDX < processesCount && !isProcessRunning) {
-            insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
+        if (startingIDX < processesCount) {
+            if (!isProcessRunning)
+                insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
+            else
+                insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds - 1);
+
         }
 
         if (isProcessRunning) {
@@ -450,11 +454,12 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                     modifiedProcess.burstTime -= algorithm.maxCPUTime;
                     insertQ(&queue, modifiedProcess);
 
+                    if (startingIDX < processesCount) {
+                        insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
+                    }
+
                 }
 
-                if (startingIDX < processesCount) {
-                    insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
-                }
             }
         }
         if (!isProcessRunning && !isEmpty(&queue)) {
