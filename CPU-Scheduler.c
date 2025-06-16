@@ -407,6 +407,9 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                     ,currentProcess.description
                 );
 
+                if (startingIDX < processesCount)
+                    insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
+
                 if (isEmpty(&queue) && startingIDX < processesCount) {
                     isIdle = true;
                     idleStartSeconds = (int)getTimeElapsed(start);
@@ -420,9 +423,6 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                     turnaroundTime = (int)getTimeElapsed(start);
                     break;
                 }
-
-                if (startingIDX < processesCount)
-                    insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
 
             }
 
@@ -450,11 +450,11 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                     modifiedProcess.burstTime -= algorithm.maxCPUTime;
                     insertQ(&queue, modifiedProcess);
 
-                    if (startingIDX < processesCount) {
-                        insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
-                    }
                 }
 
+                if (startingIDX < processesCount) {
+                    insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
+                }
             }
         }
         if (!isProcessRunning && !isEmpty(&queue)) {
