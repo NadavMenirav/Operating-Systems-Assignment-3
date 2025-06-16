@@ -79,7 +79,7 @@ Process parseProcess(const char* line);
 
 // Time and arrival
 double getTimeElapsed(struct timespec start);
-void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, int processesCount, struct timespec start);
+void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, int processesCount, struct timespec start, double timeElapsed);
 
 // Ready queue
 ReadyQueue createReadyQueue(int (*comparePriority)(Process, Process));
@@ -145,9 +145,9 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     initializeProcessesFromCSV(processesCsvFilePath, procs, &procsCount);
     sortProcesses(procs, procsCount, compareArrivalTime);
 
-    printScheduler(firstComeFirstServed, procs, procsCount);
-    printScheduler(shortestJobFirst, procs, procsCount);
-    printScheduler(priority, procs, procsCount);
+    // printScheduler(firstComeFirstServed, procs, procsCount);
+    // printScheduler(shortestJobFirst, procs, procsCount);
+    // printScheduler(priority, procs, procsCount);
     printScheduler(roundRobin, procs, procsCount);
 
 }
@@ -164,7 +164,7 @@ void initializeProcessesFromCSV(const char* path, Process outputProcs[], int* ou
 
 
     char* line = NULL;
-    size_t len = 0;
+    size_t len = MAX_LINE_LENGTH;
         while ((getline(&line, &len, file)) != -1) {
         const Process process = parseProcess(line);
         outputProcs[*outputProcsCount] = process;
@@ -178,6 +178,8 @@ void initializeProcessesFromCSV(const char* path, Process outputProcs[], int* ou
         exit(EXIT_FAILURE);
     }
 
+    free(line);
+    fclose(file);
 }
 
 Process parseProcess(const char* line)
@@ -320,9 +322,9 @@ double getTimeElapsed(const struct timespec start) {
     return (double)(now.tv_sec - start.tv_sec) + (double)(now.tv_nsec - start.tv_nsec) / 1e9;
 }
 
-void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, const int processesCount, const struct timespec start) {
+void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, const int processesCount, const struct timespec start, double timeElapsed) {
     // at a given time, adds the new arriving processes
-    const double currentTime = getTimeElapsed(start);
+    // const double currentTime = getTimeElapsed(start);
 
     if ((*startingIDX) >= processesCount) {
         fprintf(stderr, "Invalid arguments\n");
@@ -330,7 +332,7 @@ void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX
     }
 
 
-    while ((*startingIDX < processesCount) && (processes[*startingIDX].arrivalTime <=  currentTime)) {
+    while ((*startingIDX < processesCount) && (processes[*startingIDX].arrivalTime <=  timeElapsed)) {
         //currentTime = getTimeElapsed(start);
         //printf("Insert process no. %d\n", *startingIDX + 1);
         insertQ(queue, processes[*startingIDX]);
@@ -383,14 +385,15 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
     while (startingIDX < processesCount || !isEmpty(&queue) || isProcessRunning) {
         // every ---- seconds we run this.
 
-        if (startingIDX < processesCount) {
-            insertNewProcesses(&queue, processes, &startingIDX, processesCount, start);
+        processEndSeconds = (int) getTimeElapsed(start); // how long the scheduler is running
+
+        if (startingIDX < processesCount && !isProcessRunning) {
+            insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
         }
 
         if (isProcessRunning) {
             timeElapsed = (int)getTimeElapsed(processStart);
 
-            processEndSeconds = (int) getTimeElapsed(start); // how long the scheduler is running
             if (timeElapsed >= currentProcess.burstTime) {
                 isProcessRunning = false;
 
@@ -402,7 +405,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                     ,processEndSeconds
                     ,currentProcess.name
                     ,currentProcess.description
-                    );
+                );
 
                 if (isEmpty(&queue) && startingIDX < processesCount) {
                     isIdle = true;
@@ -417,6 +420,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                     turnaroundTime = (int)getTimeElapsed(start);
                     break;
                 }
+
             }
 
             else if (algorithm.maxCPUTime != -1) {
@@ -442,6 +446,10 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                     modifiedProcess.arrivalTime = processEndSeconds;
                     modifiedProcess.burstTime -= algorithm.maxCPUTime;
                     insertQ(&queue, modifiedProcess);
+
+                    if (startingIDX < processesCount) {
+                        insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
+                    }
                 }
 
             }
@@ -451,7 +459,8 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
             if (isIdle) {
                 // print
                 idleEndSeconds = (int)getTimeElapsed(start);
-                printf(CPU_IDLE, idleStartSeconds, idleEndSeconds);
+                if (idleEndSeconds > 0)
+                    printf(CPU_IDLE, idleStartSeconds, idleEndSeconds);
                 idleStartSeconds = 0;
             }
             isIdle = false;
@@ -471,6 +480,10 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
         if (!isProcessRunning && isEmpty(&queue) && startingIDX < processesCount) {
             // Idle
             isIdle = true;
+        }
+
+        if (startingIDX < processesCount) {
+            insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
         }
         ualarm((int)1e5, 0);
     }
