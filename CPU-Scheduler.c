@@ -145,9 +145,9 @@ void HandleCPUScheduler(const char* processesCsvFilePath, int timeQuantum)
     initializeProcessesFromCSV(processesCsvFilePath, procs, &procsCount);
     sortProcesses(procs, procsCount, compareArrivalTime);
 
-    // printScheduler(firstComeFirstServed, procs, procsCount);
-    // printScheduler(shortestJobFirst, procs, procsCount);
-    // printScheduler(priority, procs, procsCount);
+    printScheduler(firstComeFirstServed, procs, procsCount);
+    printScheduler(shortestJobFirst, procs, procsCount);
+    printScheduler(priority, procs, procsCount);
     printScheduler(roundRobin, procs, procsCount);
 
 }
@@ -283,7 +283,6 @@ Process removeQ(ReadyQueue* queue) {
 
 void insertQ(ReadyQueue* queue, const Process process) {
     if (queue->size < MAX_PROCESSES) {
-        printf("inserting process %s\n", process.name);
         queue->processes[queue->size] = process;
         queue->size++;
         sortProcesses(queue->processes, queue->size, queue->comparePriority);
@@ -386,13 +385,14 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
         // every ---- seconds we run this.
 
         processEndSeconds = (int) getTimeElapsed(start); // how long the scheduler is running
+        timeElapsed = (int)getTimeElapsed(processStart);
+
 
         if (startingIDX < processesCount && !isProcessRunning) {
             insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
         }
 
         if (isProcessRunning) {
-            timeElapsed = (int)getTimeElapsed(processStart);
 
             if (timeElapsed >= currentProcess.burstTime) {
                 isProcessRunning = false;
@@ -420,6 +420,9 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
                     turnaroundTime = (int)getTimeElapsed(start);
                     break;
                 }
+
+                if (startingIDX < processesCount)
+                    insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
 
             }
 
@@ -473,7 +476,6 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
             processStartSeconds = (int)getTimeElapsed(start);
 
 
-            printf("The head of queue: %s\n", queue.processes[0].name);
             currentProcess = removeQ(&queue);
         }
 
@@ -482,9 +484,6 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
             isIdle = true;
         }
 
-        if (startingIDX < processesCount) {
-            insertNewProcesses(&queue, processes, &startingIDX, processesCount, start, processEndSeconds);
-        }
         ualarm((int)1e5, 0);
     }
 
