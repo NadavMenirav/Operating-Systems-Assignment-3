@@ -331,7 +331,7 @@ void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX
     }
 
 
-    while ((*startingIDX < processesCount) && (processes[*startingIDX].arrivalTime <  timeElapsed)) {
+    while ((*startingIDX < processesCount) && (processes[*startingIDX].arrivalTime <=  timeElapsed)) {
         //currentTime = getTimeElapsed(start);
         //printf("Insert process no. %d\n", *startingIDX + 1);
         insertQ(queue, processes[*startingIDX]);
@@ -489,7 +489,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
             isIdle = true;
         }
 
-        ualarm(50000, 0);
+        ualarm(10000, 0);
     }
 
     if (algorithm.shouldPrintAverageWaitingTime) {
