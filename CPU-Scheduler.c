@@ -321,7 +321,7 @@ double getTimeElapsed(const struct timespec start) {
     return (double)(now.tv_sec - start.tv_sec) + (double)(now.tv_nsec - start.tv_nsec) / 1e9;
 }
 
-void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, const int processesCount, const struct timespec start, double timeElapsed) {
+void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX, const int processesCount, const struct timespec start, const double timeElapsed) {
     // at a given time, adds the new arriving processes
     // const double currentTime = getTimeElapsed(start);
 
@@ -331,7 +331,7 @@ void insertNewProcesses(ReadyQueue* queue, Process processes[], int* startingIDX
     }
 
 
-    while ((*startingIDX < processesCount) && (processes[*startingIDX].arrivalTime <=  timeElapsed)) {
+    while ((*startingIDX < processesCount) && (processes[*startingIDX].arrivalTime <  timeElapsed)) {
         //currentTime = getTimeElapsed(start);
         //printf("Insert process no. %d\n", *startingIDX + 1);
         insertQ(queue, processes[*startingIDX]);
@@ -385,7 +385,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
         // every ---- seconds we run this.
 
         processEndSeconds = (int) getTimeElapsed(start); // how long the scheduler is running
-        timeElapsed = (int)getTimeElapsed(processStart);
+        timeElapsed = (int)getTimeElapsed(processStart); // how long the current process is running
 
 
         if (startingIDX < processesCount) {
@@ -489,7 +489,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
             isIdle = true;
         }
 
-        ualarm((int)1e5, 0);
+        ualarm(50000, 0);
     }
 
     if (algorithm.shouldPrintAverageWaitingTime) {
