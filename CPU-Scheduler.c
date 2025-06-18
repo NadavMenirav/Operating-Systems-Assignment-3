@@ -489,7 +489,7 @@ void printScheduler(const Algorithm algorithm, Process processes[], const int pr
             isIdle = true;
         }
 
-        ualarm(250000, 0);
+        ualarm((int)1e5, 0);
     }
 
     if (algorithm.shouldPrintAverageWaitingTime) {
